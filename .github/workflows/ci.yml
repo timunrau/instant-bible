@@ -26,6 +26,20 @@ jobs:
           for i in $(seq 1 30); do curl -fsS http://localhost:8080/healthz && break || sleep 1; done
           test "$(curl -fsS http://localhost:8080/healthz)" = ok
           curl -fsS 'http://localhost:8080/John/3/16?version=BSB' | cmp - dist/index.html
+          check_header() {
+            curl -fsSI "http://localhost:8080/$1" | tr -d '\r' | grep -Fxi "$2"
+          }
+          check_header index.html 'Cache-Control: no-cache'
+          check_header sw.js 'Cache-Control: no-cache'
+          check_header sw.js 'Service-Worker-Allowed: /'
+          check_header manifest.webmanifest 'Cache-Control: no-cache'
+          check_header bibles/v1/BSB/metadata.json 'Cache-Control: no-cache'
+          asset=$(find dist/assets -name '*.js' -print -quit)
+          check_header "${asset#dist/}" 'Cache-Control: public, max-age=31536000, immutable'
+          book=$(find dist/bibles/v1/BSB -name '*.json' ! -name metadata.json -print -quit)
+          check_header "${book#dist/}" 'Cache-Control: public, max-age=31536000, immutable'
+          font=$(find dist/fonts -name '*.woff2' -print -quit)
+          check_header "${font#dist/}" 'Cache-Control: public, max-age=86400'
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

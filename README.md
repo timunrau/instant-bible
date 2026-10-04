@@ -2,6 +2,8 @@
 
 A deliberately minimal, fast, offline-first Bible reader. The installed PWA is **Bible**. Scripture owns the screen: tap the bottom reference, type a passage, press Enter. Real Berean Standard Bible text is bundled; permitted optional English translations download as complete Bibles.
 
+Application code is licensed under [MIT-0](LICENSE). Scripture, bundled fonts, and dependencies retain their own licenses; Scripture attribution is available in reader settings, and font licenses are bundled in `public/fonts`.
+
 ## Local development
 
 Requires Node.js 24+ and npm. No backend, account, API key, database, or Docker is needed for development.
