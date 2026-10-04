@@ -1,3 +1,9 @@
+## [0.3.0](https://github.com/timunrau/instant-bible/compare/v0.2.0...v0.3.0) (2026-10-04)
+
+### Features
+
+* make source footnote cross-references clickable ([372bceb](https://github.com/timunrau/instant-bible/commit/372bceb7d5487cc14f88ff3be7c548cbb5f0e315))
+
 ## [0.2.0](https://github.com/timunrau/instant-bible/compare/v0.1.0...v0.2.0) (2026-10-04)
 
 ### Features
