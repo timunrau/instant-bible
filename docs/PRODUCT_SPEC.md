@@ -4,7 +4,7 @@
 
 ## Opening and reading
 
-- First launch: Genesis 1, BSB, serif, 20px, relaxed spacing, Auto theme.
+- First launch: Genesis 1, BSB, serif, 20px, Normal spacing, Auto theme. Existing supported spacing preferences survive updates.
 - Later launches restore translation, canonical verse, and fractional verse position. Explicit chapter navigation preserves the chapter heading. Evicted optional data falls back to BSB at the same canonical reference.
 - A small chapter window includes three chapters before and five after the current chapter, bounded at Genesis 1 and Revelation 22. Rebalancing preserves the existing chapter's pixel position. Books follow naturally across boundaries.
 - Explicit chapter/verse jumps place their origin 24px from the phone top or 48px from the desktop top. Verse navigation never centers the verse. Clear horizontal intent changes one chapter; vertical/diagonal gestures and native selection remain native.
@@ -27,7 +27,7 @@
 - A conservative English, left-to-right, complete-Bible catalog is filtered through fetch(bible)'s limitless/derivatives license policy. Every install rechecks the current supported catalog. Attribution and license links remain accessible in settings.
 - Optional books and metadata use Cache Storage format v1. An installation is ready only if compatible metadata and every canonical book are present. The metadata marker is written last. Failure removes partial content. Format changes discard optional caches. BSB cannot be removed.
 - Installed optional Scripture is read directly from Cache Storage. Precached BSB navigation remains local under the service worker. Denied persistence/storage never blocks BSB reading.
-- PWA updates wait for the old app to close; no forced reload interrupts reading. No external scripts, fonts, analytics, database, or backend.
+- Background PWA updates wait for the old app to close; no automatic reload interrupts reading. Tapping the version in Reading settings explicitly checks for an update, waits for its complete installation, activates it, saves the semantic reading anchor, and reloads. Other open readers never reload automatically. Offline, failed, and timed-out checks keep the current reader and cached Bibles intact, show a status, and allow retry. No external scripts, fonts, analytics, database, or backend.
 
 ## URLs and history
 
@@ -35,6 +35,7 @@
 - Subdirectory deployments prefix canonical paths and local assets with the deployment base (for example `/instant-bible/John/3?version=BSB`). Direct links preserve passage, version, and selection. GitHub Pages serves the reader shell as its custom 404 document; installed service workers serve normal/offline navigation from the precached shell.
 - Arbitrary multi-chapter/book selections use a stable `selection` query of canonical IDs. Incoming optional-version links automatically install and switch to the intended reference. Offline failure keeps current Scripture readable with retry.
 - Typed submissions and chapter swipes push history entries. Vertical scrolling replaces the current entry at a throttled cadence. Back restores the semantic position saved before the jump.
+- Desktop Left/Right arrow keys jump one chapter, cross book boundaries, and stop at the ends of Scripture. `/` opens and synchronously focuses the reference picker. Ctrl+C (Cmd+C on Mac) copies semantically selected verses using the same output and confirmation as Copy. Shortcuts leave typing, composition, dialogs, modified navigation keys, and native text selection to the browser.
 - Document title follows `Romans 8 — Bible`.
 
 ## Selection, notes, and text export
@@ -42,6 +43,7 @@
 - A short stationary tap toggles an entire semantic verse. Noncontiguous selection persists during scrolling; clearing the final verse exits. Explicit navigation clears it.
 - Long presses, native word selection, and drags do not trigger verse selection. Selected fragments use restrained inline highlighting.
 - Copy is plain text in canonical order. First selected verse has no number; subsequent verses have inline numbers once per semantic verse. Keep sensible prose paragraphs, flatten poetry, exclude headings/notes, then a blank line and compressed reference/version.
+- Desktop selection shows a small Ctrl+C hint (⌘C on Mac) beside Copy. Touch/mobile layouts hide the hint.
 - Share includes complete selected Scripture, reference/version, and a selection deep link. Web Share is preferred; copy the full payload if unavailable. Confirmation stays on the control.
 - Footnotes use subtle superscripts with expanded tap targets. Small phone sheets/desktop anchored popovers preserve reading position; they do not navigate cross-references.
 

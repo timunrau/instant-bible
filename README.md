@@ -80,6 +80,18 @@ Pages serves `404.html` (a copy of the reader shell) for direct passage links wi
 
 The workflow runs `npm ci` and all quality gates in `Dockerfile.test` so browser and font rendering match the Linux visual baselines, then verifies production container health, deep links, and cache headers. CI publishes only the Pages site. Self-hosting builds its image directly from the checkout.
 
+## Updates and releases
+
+Tap the version at the bottom of **Aa → Reading** to check for an update and apply it immediately. The app saves your passage before reloading; settings and downloaded translations stay on the device. Failed or offline checks keep the current app usable. Background updates still wait until the old reader closes.
+
+Desktop shortcuts: Left/Right changes chapters, `/` opens the reference picker, and Ctrl+C (Cmd+C on Mac) copies selected verses. Normal is the default line spacing; existing saved spacing is preserved.
+
+All new commits and PR titles use Conventional Commits. `npm ci` installs the local commit-message hook; `npm run commits:check` validates commits since the last legacy commit (`9b3e387`). CI also checks PR titles so squash merges retain a valid release type. Existing history is kept intact.
+
+After checks pass on `main`, CI runs semantic-release with the same plugin set as rum1n8. It seeds `v0.1.0` at the last legacy commit on its first run, then uses `fix:`/`perf:` for patch releases, `feat:` for minor releases, and `!`/`BREAKING CHANGE:` for major releases. `refactor:`, `build:`, and `chore(deps):` also trigger patches. Documentation, test, and CI-only changes do not bump the version. Versions are automatic; do not edit them manually.
+
+CI commits `package.json`, `package-lock.json`, and `CHANGELOG.md`, tags the release, and creates GitHub release notes. Pages builds from that exact versioned commit. Release commits use `[skip ci]` to avoid loops. The repository’s Actions token needs permission to push release commits/tags to `main`; branch protection must allow that. Nothing is published to npm.
+
 ## Architecture and durable contracts
 
 Vue 3 + strict TypeScript + Vite, plain CSS, Vitest/Vue Test Utils, and Playwright. Small pure modules handle references, URLs, ordering, clipboard prose and persistence. Semantic nodes are rendered by Vue; remote HTML is normalized through an allowlist and never inserted with `v-html`. The reader uses a bounded stable chapter window and semantic verse anchors for persistence/history/typography. Cache Storage stores optional immutable Bible data with a final whole-Bible metadata marker; localStorage contains only settings/position. There is no IndexedDB or heavyweight state library.

@@ -13,6 +13,7 @@ test('canonical visual reader states', async ({ page }) => {
 	await jump(page, 'John3:16')
 	await page.locator('[data-verse="jhn.3.16"]').click()
 	await page.locator('[data-verse="jhn.3.18"]').click()
+	await expect(page.locator('.selection-tray')).toHaveScreenshot('selection-tray.png')
 	await expect(page).toHaveScreenshot('selected-amoled.png')
 	await page.getByRole('button', { name: 'Clear', exact: true }).click()
 	await page.getByRole('button', { name: 'Open reference picker' }).click()

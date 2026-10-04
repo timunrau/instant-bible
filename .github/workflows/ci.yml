@@ -2,12 +2,32 @@ name: Check and deploy Pages
 on:
   push:
   pull_request:
+    types: [opened, synchronize, reopened, edited]
 permissions:
   contents: read
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
+  commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Enforce Conventional Commits after the legacy history
+        run: npm run commits:check
+      - name: Check the PR title for squash merges
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$PR_TITLE" | npm exec -- commitlint
   check:
     runs-on: ubuntu-latest
     steps:
@@ -49,9 +69,49 @@ jobs:
           path: |
             playwright-report/
             test-results/
-  pages:
+  release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: check
+    needs: [commits, check]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.result.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Skip a superseded source revision
+        id: current
+        run: |
+          git fetch origin main
+          if [ "$(git rev-parse origin/main)" = "$GITHUB_SHA" ]; then
+            echo 'current=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Seed the existing 0.1.0 release before automated versioning
+        if: steps.current.outputs.current == 'true'
+        run: |
+          if ! git rev-parse --verify --quiet refs/tags/v0.1.0; then
+            git tag v0.1.0 9b3e387
+            git push origin refs/tags/v0.1.0
+          fi
+      - name: Release from Conventional Commits
+        if: steps.current.outputs.current == 'true'
+        run: npm run release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Record the versioned source for deployment
+        if: steps.current.outputs.current == 'true'
+        id: result
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+  pages:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.release.outputs.sha != ''
+    needs: release
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -62,6 +122,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release.outputs.sha }}
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -73,7 +135,7 @@ jobs:
         run: npm run build:pages && npm run bundle:check
         env:
           BASE_PATH: ${{ steps.pages.outputs.base_path }}/
-          BUILD_SHA: ${{ github.sha }}
+          BUILD_SHA: ${{ needs.release.outputs.sha }}
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist

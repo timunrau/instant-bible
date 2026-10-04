@@ -20,7 +20,7 @@ Read [the product contracts](docs/PRODUCT_SPEC.md), the relevant unit fixture, a
 - Typed reference submission, swipe, deep links, Back, selection and copy contracts live in the specification/tests.
 - All generated URLs explicitly include a version. Vertical reading uses replaceState; explicit jumps use pushState and preserve the prior semantic anchor.
 - True AMOLED means exact #000000 surfaces and #FFFFFF Scripture. Apply theme before mount. Fonts are self-hosted.
-- Never activate a new service worker by forcibly reloading an active reader.
+- Never automatically reload an active reader for a service worker update. Only an explicit tap on the version control may activate an installed update and reload, preserving the semantic reading anchor and cached Bibles.
 - Optimize touch/mobile first while keeping desktop excellent. Maintain keyboard access, native word selection, and reduced-motion support.
 - Don't casually add persistent UI. Scripture owns the screen; the normal reader has only its bottom reference/Aa bar.
 
@@ -29,6 +29,8 @@ Read [the product contracts](docs/PRODUCT_SPEC.md), the relevant unit fixture, a
 Do not add search, accounts, sync, server state, databases, saved highlights/bookmarks/notes, reading plans, audio, AI, recent-reference UI, navigable cross-references, comparison, split screen, two columns, community, analytics, ads, or a conventional navigation menu.
 
 ## Working commands
+
+Use Conventional Commits for all new commits and PR titles: `feat:`, `fix:`, `perf:`, `refactor:`, `build:`, `ci:`, `docs:`, `test:`, `style:`, `chore:`, or `revert:` with an optional scope. Use `!` or a `BREAKING CHANGE:` footer for breaking changes. CI enforces this; semantic-release owns versions, release tags, and the changelog. Do not manually bump package versions.
 
 Run `npm run check` before considering work complete. It covers lint, strict types, BSB validation, unit/components, production build, JS budget, browser/offline/visual tests. Install Chromium with `npx playwright install chromium` first. Docker verification is separate: build the production image, verify `/healthz`, direct deep-link fallback, and headers. `Dockerfile.test` offers the same browser environment as Linux CI.
 

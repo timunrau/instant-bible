@@ -69,7 +69,7 @@ async function start() {
 	// SW registration waits until Scripture has painted and never reloads an active reader.
 	if (import.meta.env.PROD && 'serviceWorker' in navigator)
 		requestAnimationFrame(() => {
-			void navigator.serviceWorker.register(appUrl('sw.js')).catch(() => {})
+			void navigator.serviceWorker.register(appUrl('sw.js'), { updateViaCache: 'none' }).catch(() => {})
 		})
 }
 void start()

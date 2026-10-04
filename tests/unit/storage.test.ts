@@ -133,6 +133,10 @@ describe('small defensive local persistence', () => {
 			theme: 'dark',
 		})
 	})
+	it.each(['compact', 'normal', 'relaxed'] as const)('preserves saved %s spacing', (spacing) => {
+		writeJson('bible-settings', { spacing })
+		expect(readSettings().spacing).toBe(spacing)
+	})
 	it('validates and clamps semantic reading anchors', () => {
 		const a = {
 			book: 'rom',

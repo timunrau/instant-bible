@@ -219,11 +219,19 @@ test('continues naturally across Malachi 4 into Matthew 1', async ({
 })
 test('selects and toggles arbitrary semantic verses and replaces the normal tray', async ({
 	page,
+	isMobile,
 }) => {
 	await jump(page, 'John3:16')
 	for (const id of ['jhn.3.19', 'jhn.3.16', 'jhn.3.18'])
 		await page.locator(`[data-verse="${id}"]`).first().click()
 	await expect(page.getByRole('status')).toHaveText('3 selected')
+	const hint = page.locator('.copy-shortcut')
+	if (isMobile) await expect(hint).toBeHidden()
+	else {
+		await expect(hint).toBeVisible()
+		const shortcut = await page.evaluate(() => /Mac/.test(navigator.platform) ? '⌘C' : 'Ctrl+C')
+		await expect(hint).toHaveText(shortcut)
+	}
 	await expect(page.locator('[data-verse="jhn.3.16"]')).toHaveCSS('animation-name', 'none')
 	await expect(
 		page.getByRole('button', { name: 'Open reference picker' }),
@@ -351,6 +359,7 @@ test('persists reader settings and AMOLED uses exact black and white', async ({
 	await page
 		.getByRole('button', { name: 'Reader settings', exact: true })
 		.click()
+	await expect(page.getByRole('button', { name: 'Normal', exact: true })).toHaveAttribute('aria-pressed', 'true')
 	await expect(page.getByRole('dialog', { name: 'Reader settings' })).toHaveCSS(
 		'background-color',
 		'rgb(0, 0, 0)',

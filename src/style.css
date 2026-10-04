@@ -250,6 +250,18 @@ a {
 	padding: 9px 10px;
 	color: var(--foreground);
 }
+.copy-shortcut {
+	display: none;
+	font-family: inherit;
+	font-size: 0.7rem;
+	white-space: nowrap;
+}
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+	.copy-shortcut {
+		display: inline;
+		margin: 0 8px 0 -5px;
+	}
+}
 .backdrop {
 	position: fixed;
 	inset: 0;
@@ -388,6 +400,14 @@ a {
 	font-size: 0.67rem;
 	color: var(--muted);
 	margin: 20px 0 0;
+	padding: 0;
+	min-height: 44px;
+	text-align: left;
+}
+.update-status {
+	font-size: 0.72rem;
+	color: var(--muted);
+	margin: 0;
 }
 .translation-list {
 	margin-top: 12px;

@@ -62,6 +62,7 @@ const metadata = ref<Translation>()
 const copied = ref(false),
 	shared = ref(false),
 	copyError = ref('')
+const copyShortcut = /Mac/.test(navigator.platform) ? '⌘C' : 'Ctrl+C'
 const note = ref<{
 	node: Extract<Inline, { kind: 'note' }>
 	left: number
@@ -189,9 +190,11 @@ async function copy(share = false) {
 	}
 }
 function keydown(event: KeyboardEvent) {
+	if (event.defaultPrevented || event.isComposing) return
 	if (event.key === 'Escape' && dialog.value) {
 		event.preventDefault()
 		close()
+		return
 	}
 	if (event.key === 'Tab' && dialog.value) {
 		const panel = note.value
@@ -213,6 +216,26 @@ function keydown(event: KeyboardEvent) {
 			event.preventDefault()
 			first.focus()
 		}
+	}
+	const target = event.target
+	if (
+		dialog.value || event.altKey || event.shiftKey ||
+		(target instanceof HTMLElement && (
+			target.isContentEditable || target.closest('input,textarea,select')
+		)) || window.getSelection()?.toString()
+	) return
+	if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c' && selected.value.size) {
+		event.preventDefault()
+		void copy()
+		return
+	}
+	if (event.ctrlKey || event.metaKey) return
+	if (event.key === '/') {
+		event.preventDefault()
+		openReference()
+	} else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+		event.preventDefault()
+		reader.step(event.key === 'ArrowRight' ? 1 : -1)
 	}
 }
 watch(
@@ -310,8 +333,9 @@ onUnmounted(() => {
 		<span class="selection-count" role="status">{{
 			copyError || `${selected.size} selected`
 		}}</span>
-		<button @click="copy()">{{ copied ? 'Copied' : 'Copy' }}</button
-		><button @click="copy(true)">{{ shared ? 'Copied' : 'Share' }}</button
+		<button aria-keyshortcuts="Control+C Meta+C" @click="copy()">{{ copied ? 'Copied' : 'Copy' }}</button>
+		<kbd class="copy-shortcut">{{ copyShortcut }}</kbd>
+		<button @click="copy(true)">{{ shared ? 'Copied' : 'Share' }}</button
 		><button @click="selected = new Set()">Clear</button>
 	</footer>
 	<div v-if="dialog" class="backdrop" aria-hidden="true" @click="close"></div>
@@ -382,6 +406,7 @@ onUnmounted(() => {
 		<ReaderSettings
 			v-model="settings"
 			:translation="metadata"
+			@before-reload="reader.save(false)"
 		/>
 	</section>
 	<section

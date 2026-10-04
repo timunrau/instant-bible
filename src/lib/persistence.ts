@@ -9,7 +9,7 @@ export interface Settings {
 export const defaults: Settings = {
 	font: 'serif',
 	size: 20,
-	spacing: 'relaxed',
+	spacing: 'normal',
 	theme: 'auto',
 }
 export function readJson(key: string): unknown {
@@ -34,9 +34,9 @@ export function readSettings(): Settings {
 			? value!.size!
 			: 20,
 		spacing:
-			value?.spacing === 'compact' || value?.spacing === 'normal'
+			value?.spacing === 'compact' || value?.spacing === 'normal' || value?.spacing === 'relaxed'
 				? value.spacing
-				: 'relaxed',
+				: defaults.spacing,
 		theme:
 			value?.theme === 'light' || value?.theme === 'dark'
 				? value.theme

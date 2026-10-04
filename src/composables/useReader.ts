@@ -370,6 +370,7 @@ export function useReader(
 		retry,
 		downloading,
 		capture,
+		save,
 		restore,
 		navigate,
 		switchVersion,

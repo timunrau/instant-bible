@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+import { updateApp } from '../lib/update'
 import type { Settings } from '../lib/persistence'
 import type { Translation } from '../lib/types'
 const props = defineProps<{
@@ -7,10 +9,29 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
 	'update:modelValue': [value: Settings]
+	'beforeReload': []
 }>()
 const update = <K extends keyof Settings>(key: K, value: Settings[K]) =>
 	emit('update:modelValue', { ...props.modelValue, [key]: value })
 const build = `${__APP_VERSION__} · ${__BUILD_SHA__}`
+const updating = ref(false)
+const updateStatus = ref('')
+async function updateVersion() {
+	if (updating.value) return
+	updating.value = true
+	try {
+		updateStatus.value = await updateApp(
+			() => emit('beforeReload'),
+			(message) => { updateStatus.value = message },
+		)
+	} catch (error) {
+		updateStatus.value = error instanceof Error && !(error instanceof TypeError)
+			? error.message
+			: 'Couldn’t check for updates. Try again.'
+	} finally {
+		updating.value = false
+	}
+}
 </script>
 <template>
 	<div class="settings-content">
@@ -87,6 +108,14 @@ const build = `${__APP_VERSION__} · ${__BUILD_SHA__}`
 				>
 			</p>
 		</div>
-		<p class="build-info">v{{ build }}</p>
+		<button
+			class="build-info"
+			aria-label="Update app"
+			:disabled="updating"
+			@click="updateVersion"
+		>
+			v{{ build }}
+		</button>
+		<p v-if="updateStatus" class="update-status" role="status">{{ updateStatus }}</p>
 	</div>
 </template>
