@@ -1,0 +1,8 @@
+services:
+  bible:
+    image: ghcr.io/timunrau/instant-bible:latest
+    ports:
+      - '${BIBLE_PORT:-8080}:80'
+    restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: 'true'

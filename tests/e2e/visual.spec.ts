@@ -1,0 +1,25 @@
+import { test, expect } from '@playwright/test'
+import { jump, settled, theme } from './helpers'
+test('canonical visual reader states', async ({ page }) => {
+	await page.goto('/')
+	await settled(page)
+	await expect(page).toHaveScreenshot('book-start-light.png')
+	await jump(page, 'John3')
+	await expect(page).toHaveScreenshot('chapter-start-light.png')
+	await jump(page, 'Psalm23')
+	await expect(page).toHaveScreenshot('poetry-light.png')
+	await theme(page, 'Dark')
+	await expect(page).toHaveScreenshot('poetry-amoled.png')
+	await jump(page, 'John3:16')
+	await page.locator('[data-verse="jhn.3.16"]').click()
+	await page.locator('[data-verse="jhn.3.18"]').click()
+	await expect(page).toHaveScreenshot('selected-amoled.png')
+	await page.getByRole('button', { name: 'Clear', exact: true }).click()
+	await page.getByRole('button', { name: 'Open reference picker' }).click()
+	await expect(page).toHaveScreenshot('reference-picker-amoled.png')
+	await page.getByRole('button', { name: 'Close reference picker' }).click()
+	await page
+		.getByRole('button', { name: 'Reader settings', exact: true })
+		.click()
+	await expect(page).toHaveScreenshot('settings-amoled.png')
+})
