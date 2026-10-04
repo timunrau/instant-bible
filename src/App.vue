@@ -135,6 +135,11 @@ async function chooseVersion(target: string) {
 	await reader.switchVersion(target)
 	if (referenceOpen.value) input.value?.focus({ preventScroll: true })
 }
+async function followNoteReference(passage: Passage) {
+	close()
+	await reader.navigate(passage)
+	document.getElementById('reference-control')?.focus({ preventScroll: true })
+}
 function openNote(
 	node: Extract<Inline, { kind: 'note' }>,
 	element: HTMLElement,
@@ -428,6 +433,13 @@ onUnmounted(() => {
 		<button class="panel-close" aria-label="Close footnote" @click="close">
 			✕
 		</button>
-		<p><InlineNodes :nodes="note.node.children" :notes="false" /></p>
+		<p>
+			<InlineNodes
+				:nodes="note.node.children"
+				:notes="false"
+				:reference-version="version"
+				@navigate="followNoteReference"
+			/>
+		</p>
 	</section>
 </template>

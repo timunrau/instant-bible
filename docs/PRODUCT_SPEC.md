@@ -34,7 +34,7 @@
 - Canonical paths: `/John/3?version=BSB`, `/John/3/16-18?version=BSB`, numbered books use hyphens. Every generated URL includes its version.
 - Subdirectory deployments prefix canonical paths and local assets with the deployment base (for example `/instant-bible/John/3?version=BSB`). Direct links preserve passage, version, and selection. GitHub Pages serves the reader shell as its custom 404 document; installed service workers serve normal/offline navigation from the precached shell.
 - Arbitrary multi-chapter/book selections use a stable `selection` query of canonical IDs. Incoming optional-version links automatically install and switch to the intended reference. Offline failure keeps current Scripture readable with retry.
-- Typed submissions and chapter swipes push history entries. Vertical scrolling replaces the current entry at a throttled cadence. Back restores the semantic position saved before the jump.
+- Typed submissions, footnote cross-reference links, and chapter swipes push history entries. Vertical scrolling replaces the current entry at a throttled cadence. Back restores the semantic position saved before the jump.
 - Desktop Left/Right arrow keys jump one chapter, cross book boundaries, and stop at the ends of Scripture. `/` opens and synchronously focuses the reference picker. Ctrl+C (Cmd+C on Mac) copies semantically selected verses using the same output and confirmation as Copy. Escape dismisses an open dialog first; otherwise it clears the verse selection and restores the normal bottom bar. Other shortcuts leave typing, composition, dialogs, modified navigation keys, and native text selection to the browser.
 - Document title follows `Romans 8 — Bible`.
 
@@ -45,7 +45,7 @@
 - Copy is plain text in canonical order. First selected verse has no number; subsequent verses have inline numbers once per semantic verse. Keep sensible prose paragraphs, flatten poetry, exclude headings/notes, then a blank line and compressed reference/version.
 - Desktop selection shows a small Ctrl+C hint (⌘C on Mac) beside Copy. Touch/mobile layouts hide the hint.
 - Share includes complete selected Scripture, reference/version, and a selection deep link. Web Share is preferred; copy the full payload if unavailable. Confirmation stays on the control.
-- Footnotes use subtle superscripts with expanded tap targets. Small phone sheets/desktop anchored popovers preserve reading position; they do not navigate cross-references.
+- Footnotes use subtle superscripts with expanded tap targets. Small phone sheets/desktop anchored popovers preserve reading position. Explicit canonical Bible citations in source footnotes are clickable passage links, keeping the current translation and working offline. Following one closes the footnote, clears selection, and jumps to the first cited verse with temporary range indication. Back restores the prior semantic reading position. References outside the supported canon remain source text.
 
 ## Settings and exclusions
 
@@ -53,6 +53,6 @@ Serif/Sans, discrete text sizes, Compact/Normal/Relaxed spacing, Auto/Light/Dark
 
 Browser/PWA chrome requests black in both reader themes. The maskable app icon keeps its artwork well inside the central safe circle with generous padding and an opaque background.
 
-Excluded: text search, accounts, sync, database, bookmarks, saved highlights/notes, plans, audio, AI, recent-reference UI, cross-reference navigation, two columns, comparisons, split screen, community, analytics, ads, conventional menus.
+Excluded: text search, accounts, sync, database, bookmarks, saved highlights/notes, plans, audio, AI, recent-reference UI, two columns, comparisons, split screen, community, analytics, ads, conventional menus.
 
 `tests/unit` specifies pure logic and semantic components. `tests/e2e` specifies startup, focus, reading, navigation, history, settings, selection, translation installation, real offline behavior, swipes, and canonical phone/desktop visual states. Never weaken tests to get a green result.

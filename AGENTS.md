@@ -26,7 +26,7 @@ Read [the product contracts](docs/PRODUCT_SPEC.md), the relevant unit fixture, a
 
 ## Scope boundaries
 
-Do not add search, accounts, sync, server state, databases, saved highlights/bookmarks/notes, reading plans, audio, AI, recent-reference UI, navigable cross-references, comparison, split screen, two columns, community, analytics, ads, or a conventional navigation menu.
+Source footnotes may link their explicit canonical Bible citations to passages in the current translation. Do not add search, accounts, sync, server state, databases, saved highlights/bookmarks/notes, reading plans, audio, AI, recent-reference UI, comparison, split screen, two columns, community, analytics, ads, or a conventional navigation menu.
 
 ## Working commands
 

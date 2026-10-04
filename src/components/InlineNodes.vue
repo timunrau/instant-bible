@@ -1,15 +1,26 @@
 <script setup lang="ts">
-import type { Inline } from '../lib/types'
-withDefaults(defineProps<{ nodes: Inline[]; notes?: boolean }>(), {
-	notes: true,
-})
+import type { Inline, Passage } from '../lib/types'
+import NoteReferenceText from './NoteReferenceText.vue'
+withDefaults(
+	defineProps<{ nodes: Inline[]; notes?: boolean; referenceVersion?: string }>(),
+	{ notes: true, referenceVersion: undefined },
+)
 const emit = defineEmits<{
 	note: [node: Extract<Inline, { kind: 'note' }>, element: HTMLElement]
+	navigate: [passage: Passage]
 }>()
 </script>
 <template>
 	<template v-for="(node, i) in nodes" :key="i">
-		<template v-if="node.kind === 'text'">{{ node.text }}</template>
+		<template v-if="node.kind === 'text'">
+			<NoteReferenceText
+				v-if="referenceVersion"
+				:text="node.text"
+				:version="referenceVersion"
+				@navigate="(passage) => emit('navigate', passage)"
+			/>
+			<template v-else>{{ node.text }}</template>
+		</template>
 		<button
 			v-else-if="node.kind === 'note' && notes !== false"
 			class="note-marker"
@@ -28,7 +39,9 @@ const emit = defineEmits<{
 			<InlineNodes
 				:nodes="node.children"
 				:notes="notes"
+				:reference-version="referenceVersion"
 				@note="(n, e) => emit('note', n, e)"
+				@navigate="(passage) => emit('navigate', passage)"
 		/>
 		</component>
 	</template>
