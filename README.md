@@ -51,35 +51,34 @@ Review screenshots before committing. Tests mock optional-download transport wit
 
 The app JS budget includes the lazy fetch(bible) client, excludes Bible/font/static assets and generated service-worker code, and is intentionally strict: current output is approximately 55 KiB gzip against a 75 KiB limit.
 
-## Production Docker
+## Self-hosting with Docker
+
+Requires Docker with Compose. Clone the repository and start it; Compose builds the production image locally:
 
 ```bash
-docker build --build-arg BUILD_SHA=$(git rev-parse HEAD) -t instant-bible:local .
-docker run --rm -p 8080:80 instant-bible:local
+git clone https://github.com/timunrau/instant-bible.git
+cd instant-bible
+docker compose up -d
+```
+
+Open `http://localhost:8080`. Set `BIBLE_PORT` to override port 8080. The service restarts unless stopped. To update after pulling changes:
+
+```bash
+git pull
+docker compose up -d --build
 ```
 
 The multi-stage image builds with Node 24 and serves static files through nginx-alpine. `/healthz` returns `ok`; Docker monitors it. Deep links fall back to the SPA. HTML, manifest and service worker use no-cache headers; hashed JS/CSS and content-addressed BSB assets have immutable one-year caching. Browser theme colors follow the current theme. New workers do not forcibly reload an active reader.
 
-To deploy the published image:
+## GitHub Pages and CI
 
-```bash
-docker compose -f compose.prod.yml pull
-docker compose -f compose.prod.yml up -d
-```
-
-Set `BIBLE_PORT` to override port 8080. Compose pulls `ghcr.io/timunrau/instant-bible:latest`, restarts unless stopped, and opts into Watchtower via `com.centurylinklabs.watchtower.enable: "true"`. Run Watchtower in your separate central stack with `WATCHTOWER_LABEL_ENABLE=true`; this repository defines no Watchtower service.
-
-## GitHub/GHCR
-
-The app is also hosted at [Instant Bible on GitHub Pages](https://timunrau.github.io/instant-bible/). Successful pushes to `main` deploy Pages after all checks pass, independently of image publication. Repository **Settings → Pages → Source** must be **GitHub Actions** (already configured). The workflow obtains the deployment base from Pages, including custom-domain deployments.
+The app is also hosted at [Instant Bible on GitHub Pages](https://timunrau.github.io/instant-bible/). Successful pushes to `main` deploy Pages after all checks pass. Repository **Settings → Pages → Source** must be **GitHub Actions** (already configured). The workflow obtains the deployment base from Pages, including custom-domain deployments.
 
 `npm run build:pages` builds `dist` for `/instant-bible/`; set `BASE_PATH=/` when building for a custom domain at the root. Bible requests, navigation/share URLs, icons, fonts, manifest and service worker use the deployment base. Docker builds continue to use `/`.
 
 Pages serves `404.html` (a copy of the reader shell) for direct passage links without a redirect. First-time deep-link requests have HTTP status 404 but open the requested Scripture normally; after installation, the service worker serves the shell for navigation and offline reloads. Pages controls HTTP cache headers; the nginx-specific headers and `/healthz` apply only to Docker hosting. `npm run test:pages`, also included in `npm run check`, verifies desktop/mobile direct links against a static Pages-style server, optional installs, history, and offline restarts.
 
-The public-repository workflow runs `npm ci` and all quality gates in `Dockerfile.test` so browser and font rendering match the Linux visual baselines, then verifies production container health, deep links, and cache headers. Only a successful push to `main` publishes `linux/amd64` and `linux/arm64` images tagged `latest` and the full immutable commit SHA. Official Docker actions authenticate with the repository's `GITHUB_TOKEN`, using `packages: write` and `contents: read`; no PAT is needed.
-
-After publishing this local repository to GitHub and the first successful image publication, open your **instant-bible package → Package settings → Change visibility → Public** so production can pull anonymously. If GitHub requires approval, ensure repository Actions has package write access. No remote repository or image is created by local checks.
+The workflow runs `npm ci` and all quality gates in `Dockerfile.test` so browser and font rendering match the Linux visual baselines, then verifies production container health, deep links, and cache headers. CI publishes only the Pages site. Self-hosting builds its image directly from the checkout.
 
 ## Architecture and durable contracts
 
