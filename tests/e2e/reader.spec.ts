@@ -55,6 +55,41 @@ test('does not show validation errors before an invalid reference is submitted',
 		page.getByRole('button', { name: 'Open reference picker' }),
 	).toHaveText('Romans 8')
 })
+test('the reference sheet has no duplicate interpretation or hint row', async ({
+	page,
+}) => {
+	await page.getByRole('button', { name: 'Open reference picker' }).click()
+	const panel = page.getByRole('dialog', { name: 'Go to a passage' })
+	const input = page.getByRole('textbox', { name: 'Bible reference' })
+	for (const draft of ['Genesis 1', 'rom 8:28', '']) {
+		await input.fill(draft)
+		await expect(panel.locator('.interpretation, .input-hint')).toHaveCount(0)
+		await expect(panel.getByRole('button')).toHaveCount(3)
+	}
+})
+test('Psalm verse 1 navigation and selection start with Scripture after the descriptive heading', async ({
+	page,
+	isMobile,
+}) => {
+	await jump(page, 'Psalm3:1')
+	const chapter = page.locator('#chapter-psa-3')
+	await expect(
+		chapter.locator('h3').filter({ hasText: 'A Psalm of David' }),
+	).toHaveText('A Psalm of David, when he fled from his son Absalom.')
+	await expect(chapter.locator('h3 [data-verse], h3 .verse-number')).toHaveCount(0)
+	const verse = chapter.locator('[data-verse="psa.3.1"]')
+	await expect(verse.first()).toContainText('1O LORD, how my foes have increased!')
+	await expect(chapter.locator('[aria-label="Verse 1"]')).toHaveCount(1)
+	await expect
+		.poll(async () => Math.round(await verseTop(page, 'psa.3.1')))
+		.toBe(isMobile ? 24 : 48)
+	await verse.first().click()
+	await expect(page.getByRole('status')).toHaveText('1 selected')
+	await expect(chapter.locator('h3 .selected')).toHaveCount(0)
+	await expect(chapter.locator('[data-verse="psa.3.1"].selected')).toHaveCount(
+		await verse.count(),
+	)
+})
 test('navigates chapter starts and individual verses to the top reading origin', async ({
 	page,
 	isMobile,

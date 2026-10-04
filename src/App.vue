@@ -8,12 +8,7 @@ import { useReader } from './composables/useReader'
 import { useGestures } from './composables/useGestures'
 import { useVisualViewport } from './composables/useVisualViewport'
 import { repository } from './lib/bible'
-import {
-	chapterLabel,
-	ordered,
-	parseReference,
-	passageLabel,
-} from './lib/references'
+import { chapterLabel, ordered, parseReference } from './lib/references'
 import { passageUrl } from './lib/urls'
 import { copyText } from './lib/clipboard'
 import { writeClipboard } from './lib/writeClipboard'
@@ -76,7 +71,6 @@ const note = ref<{
 const dialog = computed(
 	() => referenceOpen.value || settingsOpen.value || !!note.value,
 )
-const interpretation = computed(() => parseReference(typed.value))
 const readingStyle = computed(() => ({
 	'--text-size': settings.value.size / 16 + 'rem',
 	'--line-height': { compact: 1.5, normal: 1.7, relaxed: 1.85 }[
@@ -119,7 +113,6 @@ async function openSettings(event: Event) {
 	focusReturn = event.currentTarget as HTMLElement
 	metadata.value = await repository.metadata(version.value)
 	settingsOpen.value = true
-	installed.value = await repository.installedVersions()
 	await nextTick()
 	settingsPanel.value
 		?.querySelector<HTMLButtonElement>('button')
@@ -139,7 +132,6 @@ async function chooseVersion(target: string) {
 	translationsOpen.value = false
 	// Keep the draft exactly as typed. Switching doesn't submit or destroy it.
 	await reader.switchVersion(target)
-	installed.value = await repository.installedVersions()
 	if (referenceOpen.value) input.value?.focus({ preventScroll: true })
 }
 function openNote(
@@ -196,10 +188,6 @@ async function copy(share = false) {
 		copyError.value = 'Copy unavailable. Try again.'
 	}
 }
-async function removeVersion(v: string) {
-	await repository.remove(v)
-	installed.value = await repository.installedVersions()
-}
 function keydown(event: KeyboardEvent) {
 	if (event.key === 'Escape' && dialog.value) {
 		event.preventDefault()
@@ -238,6 +226,9 @@ watch(
 	},
 	{ deep: true },
 )
+watch(version, async () => {
+	installed.value = await repository.installedVersions()
+})
 watch(selected, () => {
 	copied.value = false
 	shared.value = false
@@ -366,15 +357,6 @@ onUnmounted(() => {
 		<p v-if="error" id="reference-error" class="reference-error" role="alert">
 			{{ error }}
 		</p>
-		<button
-			v-else-if="interpretation"
-			class="interpretation"
-			type="button"
-			@click="submit"
-		>
-			{{ passageLabel(interpretation) }} <span aria-hidden="true">↵</span>
-		</button>
-		<p v-else class="input-hint">Book, chapter, or verse</p>
 		<span v-if="status" class="picker-status" role="status"
 			>{{ status }} <button v-if="retry" @click="retry">Retry</button></span
 		>
@@ -399,10 +381,7 @@ onUnmounted(() => {
 		</button>
 		<ReaderSettings
 			v-model="settings"
-			:installed="installed"
 			:translation="metadata"
-			:active="version"
-			@remove="removeVersion"
 		/>
 	</section>
 	<section

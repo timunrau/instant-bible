@@ -124,6 +124,33 @@ describe('semantic Scripture rendering', () => {
 		expect(w.find('p .verse + .verse').exists()).toBe(true)
 		expect(w.findAll('p').length).toBeLessThan(36)
 	})
+	it.each([3, 23])('places Psalm %i verse 1 on Scripture rather than its descriptive heading', (number) => {
+		const data = book('psa').chapters[number - 1]!
+		const source = JSON.stringify(data)
+		const w = mount(ScriptureChapter, {
+			props: {
+				chapter: data,
+				selected: new Set([`psa.${number}.1`]),
+				indicated: new Set([`psa.${number}.1`]),
+			},
+		})
+		expect(w.findAll('h3 .verse-number')).toHaveLength(0)
+		expect(w.findAll('h3 [data-verse]')).toHaveLength(0)
+		expect(
+			w.findAll('h3').some((heading) => heading.text().includes('A Psalm of David')),
+		).toBe(true)
+		const fragments = w.findAll(`[data-verse="psa.${number}.1"]`)
+		expect(fragments[0]!.find('.verse-number').text()).toBe('1')
+		expect(w.findAll('[aria-label="Verse 1"]')).toHaveLength(1)
+		expect(
+			fragments.every(
+				(fragment) =>
+					fragment.classes().includes('selected') &&
+					fragment.classes().includes('indicated'),
+			),
+		).toBe(true)
+		expect(JSON.stringify(data)).toBe(source)
+	})
 	it('selects every fragment of an entire semantic verse without cards', () => {
 		const w = mount(ScriptureChapter, {
 			props: {
@@ -174,9 +201,7 @@ describe('semantic Scripture rendering', () => {
 		const w = mount(ReaderSettings, {
 			props: {
 				modelValue: defaults,
-				installed: ['BSB'],
 				translation: metadata,
-				active: 'BSB',
 			},
 		})
 		const b = w.findAll('button').find((b) => b.text() === 'Dark')!

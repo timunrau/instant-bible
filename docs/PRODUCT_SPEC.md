@@ -8,14 +8,14 @@
 - Later launches restore translation, canonical verse, and fractional verse position. Explicit chapter navigation preserves the chapter heading. Evicted optional data falls back to BSB at the same canonical reference.
 - A small chapter window includes three chapters before and five after the current chapter, bounded at Genesis 1 and Revelation 22. Rebalancing preserves the existing chapter's pixel position. Books follow naturally across boundaries.
 - Explicit chapter/verse jumps place their origin 24px from the phone top or 48px from the desktop top. Verse navigation never centers the verse. Clear horizontal intent changes one chapter; vertical/diagonal gestures and native selection remain native.
-- Translation paragraphs, poetry/indentation, headings, italics, small caps, and notes survive normalization. Verse numbers, including 1, remain visible. All fragments of a verse share its canonical ID.
+- Translation paragraphs, poetry/indentation, headings, italics, small caps, and notes survive normalization. Verse numbers, including 1, remain visible at the first Scripture fragment, even when the source marker occurs in a descriptive heading. Headings retain their text but do not act as verse navigation or selection targets. All Scripture fragments of a verse share its canonical ID.
 - Default Source Serif 4 is bundled locally. Desktop measure stays near 65–75 characters. The only reading column remains readable with browser text scaling.
 
 ## Reference interaction
 
 - The bottom reference gesture reveals an already-mounted input, synchronously focuses it, and selects its text. No network or animation can delay focus.
 - The reference sheet stays within the visible viewport above the mobile keyboard, including when the browser pans that viewport. Opening and dismissing it preserves the reading position.
-- Parse every keystroke locally; show one canonical interpretation where possible. Incomplete or invalid typing has no error. A rejected submission has a small inline error.
+- Parse submitted references locally. The input and Go button are sufficient; no duplicate interpretation or hint row appears beneath them. Incomplete or invalid typing has no error. A rejected submission has a small inline error.
 - Enter and Go are equivalent. Book alone means chapter 1. Abbreviations, omitted spaces, trailing colon, lists, and ranges are supported. Single-chapter books accept verse syntax naturally. Ambiguous books and nonexistent chapters/verses are rejected.
 - Ranges/lists scroll to their first canonical verse and temporarily indicate those verses. This never opens selection mode.
 - The translation abbreviation sits beside the input. Its picker preserves the typed draft and lists installed translations first. Selecting an available translation automatically installs the whole Bible while current Scripture remains on screen. No confirmation or separate Download button.
@@ -47,7 +47,7 @@
 
 ## Settings and exclusions
 
-Serif/Sans, discrete text sizes, Compact/Normal/Relaxed spacing, Auto/Light/Dark theme, attribution, optional-translation removal, and build information. Light is exact white/black; AMOLED is exact black/white on all surfaces. Settings persist locally. No About screen or install banner.
+Serif/Sans, discrete text sizes, Compact/Normal/Relaxed spacing, Auto/Light/Dark theme, attribution, and build information. Installed-translation management rows do not appear in Reading settings. Light is exact white/black; AMOLED is exact black/white on all surfaces. Settings persist locally. No About screen or install banner.
 
 Browser/PWA chrome requests black in both reader themes. The maskable app icon keeps its artwork well inside the central safe circle with generous padding and an opaque background.
 

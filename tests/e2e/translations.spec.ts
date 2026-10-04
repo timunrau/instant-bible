@@ -52,6 +52,46 @@ test('keeps the current Bible readable while another translation downloads and p
 		}),
 	).toBe(67)
 })
+test('Reading settings omit installed-translation rows while the picker keeps installed versions', async ({
+	page,
+}) => {
+	await mockDownload(page)
+	await page.goto('/Psalm/3/1?version=WEB')
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() => JSON.parse(localStorage.getItem('bible-position') || '{}').version,
+			),
+		)
+		.toBe('WEB')
+	await page
+		.getByRole('button', { name: 'Reader settings', exact: true })
+		.click()
+	const settings = page.getByRole('dialog', {
+		name: 'Reader settings',
+		exact: true,
+	})
+	await expect(settings.locator('.attribution')).toContainText(
+		'World English Bible',
+	)
+	await expect(settings.locator('.installed-row')).toHaveCount(0)
+	await expect(settings.getByRole('button', { name: /Remove/ })).toHaveCount(0)
+	await page.getByRole('button', { name: 'Close settings' }).click()
+	await page.getByRole('button', { name: 'Open reference picker' }).click()
+	await page.getByRole('button', { name: 'Choose translation' }).click()
+	await expect(
+		page.getByRole('button', { name: 'Use World English Bible', exact: true }),
+	).toContainText('Installed')
+	await page
+		.getByRole('button', { name: 'Use Berean Standard Bible', exact: true })
+		.click()
+	await page.getByRole('button', { name: 'Close reference picker' }).click()
+	await page
+		.getByRole('button', { name: 'Reader settings', exact: true })
+		.click()
+	await expect(settings.locator('.installed-row')).toHaveCount(0)
+	await expect(settings.getByRole('button', { name: /Remove/ })).toHaveCount(0)
+})
 test('a failed optional download removes partial data and keeps BSB usable with a local retry', async ({
 	page,
 }) => {

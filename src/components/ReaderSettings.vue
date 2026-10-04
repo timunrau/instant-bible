@@ -1,16 +1,12 @@
 <script setup lang="ts">
-import { catalog } from '../lib/bible'
 import type { Settings } from '../lib/persistence'
 import type { Translation } from '../lib/types'
 const props = defineProps<{
 	modelValue: Settings
-	installed: string[]
 	translation: Translation
-	active: string
 }>()
 const emit = defineEmits<{
 	'update:modelValue': [value: Settings]
-	remove: [version: string]
 }>()
 const update = <K extends keyof Settings>(key: K, value: Settings[K]) =>
 	emit('update:modelValue', { ...props.modelValue, [key]: value })
@@ -90,22 +86,6 @@ const build = `${__APP_VERSION__} · ${__BUILD_SHA__}`
 					>fetch(bible)</a
 				>
 			</p>
-		</div>
-		<div
-			v-for="t in catalog.filter(
-				(t) => installed.includes(t.abbreviation) && t.abbreviation !== 'BSB',
-			)"
-			:key="t.id"
-			class="installed-row"
-		>
-			<span>{{ t.abbreviation }} · Installed</span
-			><button
-				:disabled="t.abbreviation === active"
-				:aria-label="`Remove ${t.abbreviation}`"
-				@click="emit('remove', t.abbreviation)"
-			>
-				Remove
-			</button>
 		</div>
 		<p class="build-info">v{{ build }}</p>
 	</div>

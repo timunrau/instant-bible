@@ -319,30 +319,12 @@ a {
 	font-weight: 500;
 	padding: 10px 4px;
 }
-.interpretation,
-.input-hint,
 .reference-error {
 	font-size: 0.8rem;
-	color: var(--muted);
-	margin: 8px 0 0;
-	min-height: 34px;
-}
-.interpretation {
-	display: block;
-	width: 100%;
-	text-align: left;
-	padding: 8px 4px;
-}
-.interpretation span {
-	float: right;
-	opacity: 0.5;
-}
-.input-hint,
-.reference-error {
-	padding: 8px 4px;
-}
-.reference-error {
 	color: var(--foreground);
+	margin: 8px 0 0;
+	padding: 8px 4px;
+	min-height: 34px;
 }
 .picker-status {
 	display: block;
@@ -406,15 +388,6 @@ a {
 	font-size: 0.67rem;
 	color: var(--muted);
 	margin: 20px 0 0;
-}
-.installed-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	font-size: 0.75rem;
-}
-.installed-row button {
-	font-size: 0.72rem;
 }
 .translation-list {
 	margin-top: 12px;
