@@ -196,6 +196,11 @@ function keydown(event: KeyboardEvent) {
 		close()
 		return
 	}
+	if (event.key === 'Escape' && selected.value.size) {
+		event.preventDefault()
+		selected.value = new Set()
+		return
+	}
 	if (event.key === 'Tab' && dialog.value) {
 		const panel = note.value
 			? document.querySelector('.note-popover')

@@ -84,7 +84,7 @@ The workflow runs `npm ci` and all quality gates in `Dockerfile.test` so browser
 
 Tap the version at the bottom of **Aa → Reading** to check for an update and apply it immediately. The app saves your passage before reloading; settings and downloaded translations stay on the device. Failed or offline checks keep the current app usable. Background updates still wait until the old reader closes.
 
-Desktop shortcuts: Left/Right changes chapters, `/` opens the reference picker, and Ctrl+C (Cmd+C on Mac) copies selected verses. Normal is the default line spacing; existing saved spacing is preserved.
+Desktop shortcuts: Left/Right changes chapters, `/` opens the reference picker, Ctrl+C (Cmd+C on Mac) copies selected verses, and Escape clears the selection after dismissing any open dialog. Normal is the default line spacing; existing saved spacing is preserved.
 
 All new commits and PR titles use Conventional Commits. `npm ci` installs the local commit-message hook; `npm run commits:check` validates commits since the last legacy commit (`9b3e387`). CI also checks PR titles so squash merges retain a valid release type. Existing history is kept intact.
 

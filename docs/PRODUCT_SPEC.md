@@ -35,7 +35,7 @@
 - Subdirectory deployments prefix canonical paths and local assets with the deployment base (for example `/instant-bible/John/3?version=BSB`). Direct links preserve passage, version, and selection. GitHub Pages serves the reader shell as its custom 404 document; installed service workers serve normal/offline navigation from the precached shell.
 - Arbitrary multi-chapter/book selections use a stable `selection` query of canonical IDs. Incoming optional-version links automatically install and switch to the intended reference. Offline failure keeps current Scripture readable with retry.
 - Typed submissions and chapter swipes push history entries. Vertical scrolling replaces the current entry at a throttled cadence. Back restores the semantic position saved before the jump.
-- Desktop Left/Right arrow keys jump one chapter, cross book boundaries, and stop at the ends of Scripture. `/` opens and synchronously focuses the reference picker. Ctrl+C (Cmd+C on Mac) copies semantically selected verses using the same output and confirmation as Copy. Shortcuts leave typing, composition, dialogs, modified navigation keys, and native text selection to the browser.
+- Desktop Left/Right arrow keys jump one chapter, cross book boundaries, and stop at the ends of Scripture. `/` opens and synchronously focuses the reference picker. Ctrl+C (Cmd+C on Mac) copies semantically selected verses using the same output and confirmation as Copy. Escape dismisses an open dialog first; otherwise it clears the verse selection and restores the normal bottom bar. Other shortcuts leave typing, composition, dialogs, modified navigation keys, and native text selection to the browser.
 - Document title follows `Romans 8 — Bible`.
 
 ## Selection, notes, and text export
