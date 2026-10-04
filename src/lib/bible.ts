@@ -5,6 +5,7 @@ import genesis from '../data/genesis-one.json'
 import { books, bookById } from './books'
 import { FORMAT, type BibleBook, type Chapter, type Translation } from './types'
 import { normalizeBook } from './normalize'
+import { appUrl } from './base'
 
 export const catalog: Translation[] = [
 	bsb,
@@ -16,10 +17,10 @@ const PREFIX = 'bible-data-'
 const cacheName = (id: string) => `${PREFIX}v${FORMAT}-${id}`
 const bookUrl = (version: string, book: string) =>
 	version === 'BSB'
-		? (assets as Record<string, string>)[book]!
-		: `/bibles/v${FORMAT}/${version}/${book}.json`
+		? appUrl((assets as Record<string, string>)[book]!)
+		: appUrl(`bibles/v${FORMAT}/${version}/${book}.json`)
 const markerUrl = (version: string) =>
-	`/bibles/v${FORMAT}/${version}/metadata.json`
+	appUrl(`bibles/v${FORMAT}/${version}/metadata.json`)
 export const firstChapter = genesis as Chapter
 
 export class BibleRepository {

@@ -16,7 +16,9 @@ try {
 } catch {
 	/* Before initial commit. */
 }
+const base = process.env.BASE_PATH || '/'
 export default defineConfig({
+	base,
 	plugins: [
 		vue(),
 		VitePWA({
@@ -26,16 +28,16 @@ export default defineConfig({
 				name: 'Bible',
 				short_name: 'Bible',
 				description: 'A fast, offline-first Bible reader.',
-				start_url: '/',
-				scope: '/',
+				start_url: base,
+				scope: base,
 				display: 'standalone',
 				background_color: '#FFFFFF',
 				theme_color: '#FFFFFF',
 				icons: [
-					{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-					{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+					{ src: `${base}icon-192.png`, sizes: '192x192', type: 'image/png' },
+					{ src: `${base}icon-512.png`, sizes: '512x512', type: 'image/png' },
 					{
-						src: '/icon-maskable-512.png',
+						src: `${base}icon-maskable-512.png`,
 						sizes: '512x512',
 						type: 'image/png',
 						purpose: 'maskable',
@@ -47,7 +49,7 @@ export default defineConfig({
 					'**/*.{js,css,html,woff2,json,png,svg,ico,txt,webmanifest}',
 				],
 				maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-				navigateFallback: '/index.html',
+				navigateFallback: `${base}index.html`,
 				cleanupOutdatedCaches: true,
 				skipWaiting: false,
 				clientsClaim: false,

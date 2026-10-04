@@ -7,19 +7,21 @@
 	"scripts": {
 		"dev": "vite --host 0.0.0.0",
 		"build": "vue-tsc --noEmit && vite build",
+		"build:pages": "node scripts/build-pages.mjs",
 		"preview": "vite preview --host 0.0.0.0",
 		"lint": "eslint .",
 		"typecheck": "vue-tsc --noEmit",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:e2e": "playwright test",
+		"test:pages": "npm run build:pages && npm run bundle:check && playwright test --config playwright.pages.config.ts",
 		"test:visual": "playwright test visual",
 		"test:visual:update": "playwright test visual --update-snapshots",
 		"bible:update-bsb": "tsx scripts/update-bsb.ts",
 		"bible:validate": "tsx scripts/validate-bsb.ts",
 		"bundle:check": "node scripts/check-bundle.mjs",
 		"icons:generate": "node scripts/generate-icons.mjs",
-		"check": "npm run lint && npm run typecheck && npm run bible:validate && npm run test && npm run build && npm run bundle:check && npm run test:e2e"
+		"check": "npm run lint && npm run typecheck && npm run bible:validate && npm run test && npm run build && npm run bundle:check && npm run test:e2e && npm run test:pages"
 	},
 	"dependencies": {
 		"@gracious.tech/fetch-client": "^2.4.0",

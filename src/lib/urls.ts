@@ -1,4 +1,5 @@
 import { bookById, findBook } from './books'
+import { appBase, appUrl } from './base'
 import {
 	compress,
 	fromId,
@@ -26,12 +27,14 @@ export function passageUrl(p: Passage, version: string): string {
 		suffix = `/${first.verse ?? 1}`
 		params.set('selection', refs.map(verseId).join(','))
 	}
-	return `/${slug(first.book)}/${first.chapter}${suffix}?${params}`
+	return appUrl(`${slug(first.book)}/${first.chapter}${suffix}?${params}`)
 }
 export function parseUrl(
 	url: URL,
 ): { passage: Passage; version: string } | undefined {
-	const pieces = decodeURIComponent(url.pathname).split('/').filter(Boolean)
+	if (!url.pathname.startsWith(appBase)) return
+	const pieces = decodeURIComponent(url.pathname.slice(appBase.length))
+		.split('/').filter(Boolean)
 	if (pieces.length < 2 || pieces.length > 3 || !/^\d+$/.test(pieces[1]!))
 		return
 	const book = findBook(pieces[0]!.replace(/-/g, ' '))

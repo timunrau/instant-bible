@@ -3,6 +3,7 @@ import App from './App.vue'
 import { firstChapter, repository, translationFor } from './lib/bible'
 import { readAnchor, validAnchor } from './lib/persistence'
 import { parseUrl } from './lib/urls'
+import { appUrl } from './lib/base'
 import type { Anchor } from './lib/types'
 import './style.css'
 
@@ -68,7 +69,7 @@ async function start() {
 	// SW registration waits until Scripture has painted and never reloads an active reader.
 	if (import.meta.env.PROD && 'serviceWorker' in navigator)
 		requestAnimationFrame(() => {
-			void navigator.serviceWorker.register('/sw.js').catch(() => {})
+			void navigator.serviceWorker.register(appUrl('sw.js')).catch(() => {})
 		})
 }
 void start()

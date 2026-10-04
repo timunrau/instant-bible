@@ -71,6 +71,12 @@ Set `BIBLE_PORT` to override port 8080. Compose pulls `ghcr.io/timunrau/instant-
 
 ## GitHub/GHCR
 
+The app is also hosted at [Instant Bible on GitHub Pages](https://timunrau.github.io/instant-bible/). Successful pushes to `main` deploy Pages after all checks pass, independently of image publication. Repository **Settings → Pages → Source** must be **GitHub Actions** (already configured). The workflow obtains the deployment base from Pages, including custom-domain deployments.
+
+`npm run build:pages` builds `dist` for `/instant-bible/`; set `BASE_PATH=/` when building for a custom domain at the root. Bible requests, navigation/share URLs, icons, fonts, manifest and service worker use the deployment base. Docker builds continue to use `/`.
+
+Pages serves `404.html` (a copy of the reader shell) for direct passage links without a redirect. First-time deep-link requests have HTTP status 404 but open the requested Scripture normally; after installation, the service worker serves the shell for navigation and offline reloads. Pages controls HTTP cache headers; the nginx-specific headers and `/healthz` apply only to Docker hosting. `npm run test:pages`, also included in `npm run check`, verifies desktop/mobile direct links against a static Pages-style server, optional installs, history, and offline restarts.
+
 The public-repository workflow runs `npm ci` and all quality gates in `Dockerfile.test` so browser and font rendering match the Linux visual baselines, then verifies production container health, deep links, and cache headers. Only a successful push to `main` publishes `linux/amd64` and `linux/arm64` images tagged `latest` and the full immutable commit SHA. Official Docker actions authenticate with the repository's `GITHUB_TOKEN`, using `packages: write` and `contents: read`; no PAT is needed.
 
 After publishing this local repository to GitHub and the first successful image publication, open your **instant-bible package → Package settings → Change visibility → Public** so production can pull anonymously. If GitHub requires approval, ensure repository Actions has package write access. No remote repository or image is created by local checks.

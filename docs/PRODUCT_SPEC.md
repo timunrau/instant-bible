@@ -31,6 +31,7 @@
 ## URLs and history
 
 - Canonical paths: `/John/3?version=BSB`, `/John/3/16-18?version=BSB`, numbered books use hyphens. Every generated URL includes its version.
+- Subdirectory deployments prefix canonical paths and local assets with the deployment base (for example `/instant-bible/John/3?version=BSB`). Direct links preserve passage, version, and selection. GitHub Pages serves the reader shell as its custom 404 document; installed service workers serve normal/offline navigation from the precached shell.
 - Arbitrary multi-chapter/book selections use a stable `selection` query of canonical IDs. Incoming optional-version links automatically install and switch to the intended reference. Offline failure keeps current Scripture readable with retry.
 - Typed submissions and chapter swipes push history entries. Vertical scrolling replaces the current entry at a throttled cadence. Back restores the semantic position saved before the jump.
 - Document title follows `Romans 8 — Bible`.
