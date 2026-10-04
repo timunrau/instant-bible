@@ -12,17 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run check
+      - name: Run checks in the visual baseline environment
+        run: |
+          docker build -f Dockerfile.test -t instant-bible:test .
+          mkdir -p playwright-report test-results
+          docker run --rm --ipc=host -e CI=true \
+            -v "$PWD/playwright-report:/app/playwright-report" \
+            -v "$PWD/test-results:/app/test-results" \
+            instant-bible:test
       - name: Verify production container
         run: |
           docker build --build-arg BUILD_SHA=${{ github.sha }} -t instant-bible:check .
           docker run -d --name bible-check -p 8080:80 instant-bible:check
+          docker cp bible-check:/usr/share/nginx/html/. dist
           for i in $(seq 1 30); do curl -fsS http://localhost:8080/healthz && break || sleep 1; done
           test "$(curl -fsS http://localhost:8080/healthz)" = ok
           curl -fsS 'http://localhost:8080/John/3/16?version=BSB' | cmp - dist/index.html

@@ -71,7 +71,7 @@ Set `BIBLE_PORT` to override port 8080. Compose pulls `ghcr.io/timunrau/instant-
 
 ## GitHub/GHCR
 
-The public-repository workflow runs `npm ci`, all quality gates, and a production container health/deep-link smoke test. Only a successful push to `main` publishes `linux/amd64` and `linux/arm64` images tagged `latest` and the full immutable commit SHA. Official Docker actions authenticate with the repository's `GITHUB_TOKEN`, using `packages: write` and `contents: read`; no PAT is needed.
+The public-repository workflow runs `npm ci` and all quality gates in `Dockerfile.test` so browser and font rendering match the Linux visual baselines, then verifies production container health, deep links, and cache headers. Only a successful push to `main` publishes `linux/amd64` and `linux/arm64` images tagged `latest` and the full immutable commit SHA. Official Docker actions authenticate with the repository's `GITHUB_TOKEN`, using `packages: write` and `contents: read`; no PAT is needed.
 
 After publishing this local repository to GitHub and the first successful image publication, open your **instant-bible package → Package settings → Change visibility → Public** so production can pull anonymously. If GitHub requires approval, ensure repository Actions has package write access. No remote repository or image is created by local checks.
 
