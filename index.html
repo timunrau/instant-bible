@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#FFFFFF">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="light dark">
   <meta name="description" content="A fast, offline-first Bible reader.">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -12,7 +13,7 @@
   <title>Genesis 1 — Bible</title>
   <style>html,body{margin:0;background:#fff;color:#000}html[data-theme=dark],html[data-theme=dark] body{background:#000;color:#fff}html{color-scheme:light}html[data-theme=dark]{color-scheme:dark}</style>
   <script>
-    (()=>{let theme='auto';try{theme=JSON.parse(localStorage.getItem('bible-settings')||'{}').theme||'auto'}catch{}if(!['auto','light','dark'].includes(theme))theme='auto';const dark=theme==='dark'||theme==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.dataset.theme=dark?'dark':'light';document.querySelector('meta[name="theme-color"]').content=dark?'#000000':'#FFFFFF'})()
+    (()=>{let theme='auto';try{theme=JSON.parse(localStorage.getItem('bible-settings')||'{}').theme||'auto'}catch{}if(!['auto','light','dark'].includes(theme))theme='auto';const dark=theme==='dark'||theme==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.dataset.theme=dark?'dark':'light';document.querySelector('meta[name="color-scheme"]').content=dark?'dark':'light'})()
   </script>
 </head>
 <body>

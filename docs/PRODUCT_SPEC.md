@@ -14,6 +14,7 @@
 ## Reference interaction
 
 - The bottom reference gesture reveals an already-mounted input, synchronously focuses it, and selects its text. No network or animation can delay focus.
+- The reference sheet stays within the visible viewport above the mobile keyboard, including when the browser pans that viewport. Opening and dismissing it preserves the reading position.
 - Parse every keystroke locally; show one canonical interpretation where possible. Incomplete or invalid typing has no error. A rejected submission has a small inline error.
 - Enter and Go are equivalent. Book alone means chapter 1. Abbreviations, omitted spaces, trailing colon, lists, and ranges are supported. Single-chapter books accept verse syntax naturally. Ambiguous books and nonexistent chapters/verses are rejected.
 - Ranges/lists scroll to their first canonical verse and temporarily indicate those verses. This never opens selection mode.
@@ -47,6 +48,8 @@
 ## Settings and exclusions
 
 Serif/Sans, discrete text sizes, Compact/Normal/Relaxed spacing, Auto/Light/Dark theme, attribution, optional-translation removal, and build information. Light is exact white/black; AMOLED is exact black/white on all surfaces. Settings persist locally. No About screen or install banner.
+
+Browser/PWA chrome requests black in both reader themes. The maskable app icon keeps its artwork well inside the central safe circle with generous padding and an opaque background.
 
 Excluded: text search, accounts, sync, database, bookmarks, saved highlights/notes, plans, audio, AI, recent-reference UI, cross-reference navigation, two columns, comparisons, split screen, community, analytics, ads, conventional menus.
 

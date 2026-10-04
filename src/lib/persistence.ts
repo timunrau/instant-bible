@@ -71,6 +71,6 @@ export function applyTheme(theme: Settings['theme']) {
 		(theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)
 	document.documentElement.dataset.theme = dark ? 'dark' : 'light'
 	document
-		.querySelector('meta[name="theme-color"]')
-		?.setAttribute('content', dark ? '#000000' : '#FFFFFF')
+		.querySelector('meta[name="color-scheme"]')
+		?.setAttribute('content', dark ? 'dark' : 'light')
 }

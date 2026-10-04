@@ -6,6 +6,7 @@ import ReaderSettings from './components/ReaderSettings.vue'
 import TranslationPicker from './components/TranslationPicker.vue'
 import { useReader } from './composables/useReader'
 import { useGestures } from './composables/useGestures'
+import { useVisualViewport } from './composables/useVisualViewport'
 import { repository } from './lib/bible'
 import {
 	chapterLabel,
@@ -52,6 +53,7 @@ const gestures = useGestures(
 	() => selected.value.size > 0,
 )
 const settings = ref(readSettings())
+const viewportStyle = useVisualViewport()
 const referenceOpen = ref(false),
 	settingsOpen = ref(false),
 	translationsOpen = ref(false)
@@ -325,6 +327,7 @@ onUnmounted(() => {
 	<section
 		ref="picker"
 		class="panel reference-panel"
+		:style="viewportStyle"
 		:hidden="!referenceOpen"
 		role="dialog"
 		aria-modal="true"

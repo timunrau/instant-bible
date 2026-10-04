@@ -285,6 +285,10 @@ a {
 .panel-heading button {
 	font-size: 0.9rem;
 }
+.reference-panel {
+	bottom: var(--viewport-bottom, 0px);
+	max-height: min(85dvh, calc(var(--viewport-height, 100dvh) - 16px));
+}
 .reference-panel form {
 	display: flex;
 	gap: 6px;
@@ -498,6 +502,10 @@ a {
 	.settings-panel {
 		width: 390px;
 		left: calc(50% + 155px);
+	}
+	.reference-panel {
+		bottom: calc(88px + var(--viewport-bottom, 0px));
+		max-height: min(calc(100dvh - 120px), calc(var(--viewport-height, 100dvh) - 120px));
 	}
 	.note-popover {
 		left: var(--note-left);
