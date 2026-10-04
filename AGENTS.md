@@ -38,4 +38,6 @@ BSB updater: `npm run bible:update-bsb`; validator: `npm run bible:validate`. Ge
 
 Visual baselines are platform-specific. Inspect changed screenshots; do not blanket-update baselines to hide regressions. Use the Linux test image for CI baseline updates. Keep the total gzipped application JS under 75 KiB, including lazy translation code; Bible/font assets and service-worker code are excluded.
 
+Whenever the UI changes, run `npm run screenshots`, review the three generated mobile PNGs in `docs/screenshots`, and include them with the change. Install Chromium first with `npx playwright install chromium` if needed. The command builds production, starts and stops its own preview server on port 4174, and captures the reader, passage picker, and settings with a fresh browser context, fixed phone viewport, and light theme after fonts and Scripture load. Keep README screenshots mobile-only and use one theme; use standard Markdown image embeds without a table. Visual test baselines are managed separately.
+
 When writing Markdown, indent nested list items with literal tabs rather than spaces.

@@ -20,6 +20,7 @@
 		"test:pages": "npm run build:pages && npm run bundle:check && playwright test --config playwright.pages.config.ts",
 		"test:visual": "playwright test visual",
 		"test:visual:update": "playwright test visual --update-snapshots",
+		"screenshots": "npm run build && playwright test --config playwright.screenshots.config.ts",
 		"bible:update-bsb": "tsx scripts/update-bsb.ts",
 		"bible:validate": "tsx scripts/validate-bsb.ts",
 		"bundle:check": "node scripts/check-bundle.mjs",
