@@ -13,9 +13,9 @@ it.each([
 	vi.resetModules()
 	const { passageUrl, parseUrl } = await import('../../src/lib/urls')
 	const passage = parseReference(reference)!
-	const path = passageUrl(passage, 'WEB')
+	const path = passageUrl(passage)
 	expect(path).toMatch(/^\/instant-bible\//)
-	expect(parseUrl(new URL(path, 'https://bible.test'))).toEqual({ passage, version: 'WEB' })
+	expect(parseUrl(new URL(path, 'https://bible.test'))).toEqual({ passage, version: 'BSB' })
 	expect(parseUrl(new URL(path.replace('/instant-bible/', '/'), 'https://bible.test'))).toBeUndefined()
 	expect(parseUrl(new URL(path.replace('/instant-bible/', '/instant-bible-other/'), 'https://bible.test'))).toBeUndefined()
 })

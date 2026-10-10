@@ -4,18 +4,12 @@ import type { Chapter, VerseRef } from './types'
 export function copyText(
 	refs: VerseRef[],
 	chapters: Chapter[],
-	version: string,
 ): string {
 	const selection = ordered(refs)
 	const ids = new Set(selection.map(verseId))
 	const first = verseId(selection[0]!)
 	const numbered = new Set<string>()
-	const paragraphs: string[] = []
-	let poetry = ''
-	const flushPoetry = () => {
-		if (poetry) paragraphs.push(poetry.trim())
-		poetry = ''
-	}
+	const parts: string[] = []
 	for (const chapter of chapters) {
 		for (const block of chapter.blocks) {
 			if (block.kind === 'heading' || block.kind === 'break') continue
@@ -29,20 +23,14 @@ export function copyText(
 				})
 				.join(' ')
 				.trim()
-			if (!body) continue
-			if (block.kind === 'poetry') poetry += (poetry ? ' ' : '') + body
-			else {
-				flushPoetry()
-				paragraphs.push(body)
-			}
+			if (body) parts.push(body)
 		}
-		flushPoetry()
 	}
+
 	return (
-		paragraphs.join('\n\n') +
-		'\n\n' +
+		parts.join(' ').replace(/\s+/g, ' ') +
+		'\n' +
 		formatReferences(selection) +
-		' ' +
-		version
+		' BSB'
 	)
 }

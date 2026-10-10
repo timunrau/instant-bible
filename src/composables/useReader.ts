@@ -1,6 +1,6 @@
 import { nextTick, onMounted, onUnmounted, ref, shallowRef } from 'vue'
 import { chapterIndex, chapterNumber } from '../lib/books'
-import { nearestVerse, repository, translationFor } from '../lib/bible'
+import { nearestVerse, repository } from '../lib/bible'
 import { chapterLabel, fromId, verseId } from '../lib/references'
 import { parseUrl, passageUrl } from '../lib/urls'
 import { validAnchor, writeJson } from '../lib/persistence'
@@ -9,17 +9,13 @@ import type { Anchor, Chapter, Passage, VerseRef } from '../lib/types'
 export function useReader(
 	initial: Chapter,
 	initialAnchor: Anchor,
-	pendingVersion?: string,
 	initialPassage?: Passage,
 ) {
 	const chapters = shallowRef<Chapter[]>([initial])
-	const version = ref(initialAnchor.version)
 	const current = ref({ book: initial.book, chapter: initial.number })
 	const selected = ref(new Set<string>())
 	const indicated = ref(new Set<string>())
 	const status = ref('')
-	const retry = shallowRef<(() => void) | undefined>()
-	const downloading = ref(false)
 	let operation = 0
 	let balancing = false
 	let moving = false
@@ -48,7 +44,7 @@ export function useReader(
 		const article = chapterElement(parsed.book, parsed.chapter)
 		return {
 			...parsed,
-			version: version.value,
+			version: 'BSB',
 			fragment: verseElements(verseId(parsed)).indexOf(element),
 			fraction: Math.max(
 				-16,
@@ -85,7 +81,6 @@ export function useReader(
 	async function windowFor(
 		book: string,
 		chapter: number,
-		activeVersion = version.value,
 	) {
 		const index = chapterNumber(book, chapter)
 		const refs = chapterIndex.slice(
@@ -93,7 +88,7 @@ export function useReader(
 			Math.min(chapterIndex.length, index + 6),
 		)
 		return Promise.all(
-			refs.map((r) => repository.chapter(activeVersion, r.book, r.chapter)),
+			refs.map((r) => repository.chapter(r.book, r.chapter)),
 		)
 	}
 
@@ -110,7 +105,7 @@ export function useReader(
 				verse: anchor.chapterStart ? undefined : anchor.verse,
 				verses: [],
 			}
-			history.replaceState({ anchor }, '', passageUrl(passage, version.value))
+			history.replaceState({ anchor }, '', passageUrl(passage))
 		} else history.replaceState({ ...history.state, anchor }, '')
 	}
 
@@ -159,18 +154,16 @@ export function useReader(
 		options: {
 			history?: boolean
 			anchor?: Anchor
-			version?: string
 			indicate?: boolean
 		} = {},
 	) {
-		const targetVersion = options.version ?? version.value
+		status.value = ''
 		const token = ++operation
 		save(false)
 		moving = true
 		try {
 			// Render the destination from memory/cache immediately, then extend its chapter window.
 			const destination = await repository.chapter(
-				targetVersion,
 				passage.book,
 				passage.chapter,
 			)
@@ -181,7 +174,7 @@ export function useReader(
 				verse: passage.verse ?? 1,
 				fraction: 0,
 				chapterStart: !passage.verse,
-				version: targetVersion,
+				version: 'BSB' as const,
 			}
 			selected.value = new Set()
 			indicated.value = new Set()
@@ -192,20 +185,18 @@ export function useReader(
 					indicated.value = new Set()
 				}, 2400)
 			}
-			version.value = targetVersion
 			chapters.value = [destination]
 			current.value = { book: passage.book, chapter: passage.chapter }
 			if (options.history !== false)
-				history.pushState({ anchor }, '', passageUrl(passage, targetVersion))
+				history.pushState({ anchor }, '', passageUrl(passage))
 			else
-				history.replaceState({ anchor }, '', passageUrl(passage, targetVersion))
+				history.replaceState({ anchor }, '', passageUrl(passage))
 			await nextTick()
 			restore(anchor)
 			// Make the whole requested verse/top origin reachable even near the final chapter.
 			const updated = await windowFor(
 				passage.book,
 				passage.chapter,
-				targetVersion,
 			)
 			if (token !== operation) return
 			chapters.value = updated
@@ -217,46 +208,6 @@ export function useReader(
 			status.value = 'This passage is unavailable. Try again.'
 		} finally {
 			if (token === operation) moving = false
-		}
-	}
-
-	async function switchVersion(
-		requested: string,
-		passage?: Passage,
-		explicit = true,
-	) {
-		const target = passage ?? { ...capture(), verses: [] }
-		const anchor = passage ? undefined : { ...capture(), version: requested }
-		const translation = translationFor(requested)
-		if (!translation) {
-			status.value = `${requested} is unavailable. BSB remains readable.`
-			return
-		}
-		if (downloading.value) return
-		status.value = ''
-		retry.value = undefined
-		try {
-			if (!(await repository.installed(translation))) {
-				downloading.value = true
-				status.value = `${requested} · 0%`
-				await repository.install(translation, (done, total) => {
-					status.value = `${requested} · ${Math.round((done / total) * 100)}%`
-				})
-			}
-			await navigate(target, {
-				version: requested,
-				history: explicit,
-				anchor,
-				indicate: !!passage,
-			})
-			status.value = ''
-		} catch {
-			status.value = `Couldn’t install ${requested}.`
-			retry.value = () => {
-				void switchVersion(requested, passage, explicit)
-			}
-		} finally {
-			downloading.value = false
 		}
 	}
 
@@ -295,12 +246,12 @@ export function useReader(
 		const anchor = validAnchor(event.state?.anchor)
 		const route = parseUrl(new URL(location.href))
 		if (!route) return
-		if (anchor && anchor.version === version.value)
+		if (anchor)
 			await navigate(
 				{ ...anchor, verses: [] },
 				{ history: false, anchor, indicate: false },
 			)
-		else await switchVersion(route.version, route.passage, false)
+		else await navigate(route.passage, { history: false })
 	}
 	const leave = () => save(false)
 	const selectionRefs = (): VerseRef[] =>
@@ -324,7 +275,6 @@ export function useReader(
 					verse: initialAnchor.chapterStart ? undefined : initialAnchor.verse,
 					verses: [],
 				},
-				version.value,
 			),
 		)
 		if (initialPassage?.verses.length) {
@@ -343,13 +293,7 @@ export function useReader(
 		window.addEventListener('resize', onResize)
 		window.addEventListener('popstate', onPop)
 		window.addEventListener('pagehide', leave)
-		if (pendingVersion)
-			void switchVersion(
-				pendingVersion,
-				initialPassage ?? { ...initialAnchor, verses: [] },
-				false,
-			)
-		else void repository.cleanup()
+		void repository.cleanup().catch(() => {})
 	})
 	onUnmounted(() => {
 		window.removeEventListener('scroll', onScroll)
@@ -362,18 +306,14 @@ export function useReader(
 	})
 	return {
 		chapters,
-		version,
 		current,
 		selected,
 		indicated,
 		status,
-		retry,
-		downloading,
 		capture,
 		save,
 		restore,
 		navigate,
-		switchVersion,
 		step,
 		toggle,
 		selectionRefs,

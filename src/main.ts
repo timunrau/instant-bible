@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import { firstChapter, repository, translationFor } from './lib/bible'
+import { firstChapter, repository } from './lib/bible'
 import { readAnchor, validAnchor } from './lib/persistence'
 import { parseUrl } from './lib/urls'
 import { appUrl } from './lib/base'
@@ -36,20 +36,11 @@ async function start() {
 					chapterStart: true,
 					version: 'BSB',
 				})
-	let active = desired.version
-	let pendingVersion: string | undefined
-	if (active !== 'BSB') {
-		const t = translationFor(active)
-		if (!t || !(await repository.installed(t))) {
-			if (route) pendingVersion = active
-			active = 'BSB'
-		}
-	}
-	const anchor = { ...desired, version: active }
+	const anchor = { ...desired, version: 'BSB' as const }
 	let initial = firstChapter
 	try {
-		if (anchor.book !== 'gen' || anchor.chapter !== 1 || active !== 'BSB')
-			initial = await repository.chapter(active, anchor.book, anchor.chapter)
+		if (anchor.book !== 'gen' || anchor.chapter !== 1)
+			initial = await repository.chapter(anchor.book, anchor.chapter)
 	} catch {
 		Object.assign(anchor, {
 			book: 'gen',
@@ -63,7 +54,6 @@ async function start() {
 	createApp(App, {
 		initial,
 		anchor,
-		pendingVersion,
 		initialPassage: route?.passage,
 	}).mount('#app')
 	// SW registration waits until Scripture has painted and never reloads an active reader.

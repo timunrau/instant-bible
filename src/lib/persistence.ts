@@ -56,7 +56,7 @@ export function validAnchor(value: unknown): Anchor | undefined {
 		book: a.book,
 		chapter: a.chapter,
 		verse: a.verse,
-		version: a.version,
+		version: 'BSB',
 		fraction: Math.max(-16, Math.min(1, a.fraction)),
 		chapterStart: !!a.chapterStart,
 		fragment: Number.isInteger(a.fragment)

@@ -32,12 +32,12 @@ describe('source footnote citations', () => {
 			props: {
 				nodes: [{ kind: 'em', children: [{ kind: 'text', text: 'See Mark 10:7–8.' }] }],
 				notes: false,
-				referenceVersion: 'WEB',
+				linkReferences: true,
 			},
 		})
 		const link = wrapper.get('em a')
 		expect(link.text()).toBe('Mark 10:7–8')
-		expect(link.attributes('href')).toBe('/Mark/10/7-8?version=WEB')
+		expect(link.attributes('href')).toBe('/Mark/10/7-8?version=BSB')
 		await link.trigger('click', { button: 0 })
 		expect(wrapper.emitted('navigate')?.[0]?.[0]).toMatchObject({ book: 'mrk', chapter: 10, verse: 7 })
 		const modified = new MouseEvent('click', { button: 0, ctrlKey: true, cancelable: true })

@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test'
 import { jump, settled, verseTop } from '../e2e/helpers'
-import { mockDownload } from '../e2e/download-fixture'
 
 test('direct Pages links preserve ranges, history, assets and offline reading', async ({ page, context, isMobile }) => {
 	const failures: string[] = []
@@ -38,8 +37,7 @@ test('direct Pages links preserve ranges, history, assets and offline reading', 
 	expect(failures).toEqual([])
 })
 
-test('root launch, optional installs, selection links and offline restarts use the deployment base', async ({ page, context }) => {
-	await mockDownload(page)
+test('root launch, selection links and offline restarts use the deployment base', async ({ page, context }) => {
 	await page.goto('/instant-bible/')
 	await settled(page)
 	await expect(page).toHaveURL(/\/instant-bible\/Genesis\/1\?version=BSB$/)
@@ -47,21 +45,14 @@ test('root launch, optional installs, selection links and offline restarts use t
 	await page.reload()
 	await settled(page)
 	await page.getByRole('button', { name: 'Open reference picker' }).click()
-	await page.getByRole('button', { name: 'Choose translation' }).click()
-	await page.getByRole('button', { name: 'Use World English Bible', exact: true }).click()
-	await expect(page.getByRole('button', { name: 'Choose translation' })).toHaveText('WEB', { timeout: 15000 })
 	await page.getByRole('textbox', { name: 'Bible reference' }).fill('John21:25;Acts1:1-2')
 	await page.getByRole('textbox', { name: 'Bible reference' }).press('Enter')
-	await expect(page).toHaveURL(/\/instant-bible\/John\/21\/25\?version=WEB&selection=/)
-	expect(await page.evaluate(async () => {
-		const cache = await caches.open('bible-data-v1-eng_web')
-		return (await cache.keys()).map((r) => new URL(r.url).pathname)
-	})).toEqual(expect.arrayContaining(['/instant-bible/bibles/v1/WEB/metadata.json', '/instant-bible/bibles/v1/WEB/act.json']))
+	await expect(page).toHaveURL(/\/instant-bible\/John\/21\/25\?version=BSB&selection=/)
 	await context.setOffline(true)
 	await page.reload()
 	await settled(page)
 	await expect(page.locator('[data-verse="jhn.21.25"]').first()).toHaveClass(/indicated/)
 	await expect(page.locator('[data-verse="act.1.1"]').first()).toHaveClass(/indicated/)
 	await jump(page, 'Jude5')
-	await expect(page).toHaveURL(/\/instant-bible\/Jude\/1\/5\?version=WEB$/)
+	await expect(page).toHaveURL(/\/instant-bible\/Jude\/1\/5\?version=BSB$/)
 })

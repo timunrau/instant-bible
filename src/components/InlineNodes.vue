@@ -2,8 +2,8 @@
 import type { Inline, Passage } from '../lib/types'
 import NoteReferenceText from './NoteReferenceText.vue'
 withDefaults(
-	defineProps<{ nodes: Inline[]; notes?: boolean; referenceVersion?: string }>(),
-	{ notes: true, referenceVersion: undefined },
+	defineProps<{ nodes: Inline[]; notes?: boolean; linkReferences?: boolean }>(),
+	{ notes: true, linkReferences: false },
 )
 const emit = defineEmits<{
 	note: [node: Extract<Inline, { kind: 'note' }>, element: HTMLElement]
@@ -14,9 +14,8 @@ const emit = defineEmits<{
 	<template v-for="(node, i) in nodes" :key="i">
 		<template v-if="node.kind === 'text'">
 			<NoteReferenceText
-				v-if="referenceVersion"
+				v-if="linkReferences"
 				:text="node.text"
-				:version="referenceVersion"
 				@navigate="(passage) => emit('navigate', passage)"
 			/>
 			<template v-else>{{ node.text }}</template>
@@ -39,7 +38,7 @@ const emit = defineEmits<{
 			<InlineNodes
 				:nodes="node.children"
 				:notes="notes"
-				:reference-version="referenceVersion"
+				:link-references="linkReferences"
 				@note="(n, e) => emit('note', n, e)"
 				@navigate="(passage) => emit('navigate', passage)"
 		/>

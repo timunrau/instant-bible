@@ -4,7 +4,7 @@ import { noteReferences } from '../lib/noteReferences'
 import { passageUrl } from '../lib/urls'
 import type { Passage } from '../lib/types'
 
-const props = defineProps<{ text: string; version: string }>()
+const props = defineProps<{ text: string }>()
 const parts = computed(() => noteReferences(props.text))
 const emit = defineEmits<{ navigate: [passage: Passage] }>()
 function follow(event: MouseEvent, passage: Passage) {
@@ -18,7 +18,7 @@ function follow(event: MouseEvent, passage: Passage) {
 		<a
 			v-if="part.passage"
 			class="note-reference"
-			:href="passageUrl(part.passage, version)"
+			:href="passageUrl(part.passage)"
 			@click="follow($event, part.passage)"
 		>{{ part.text }}</a>
 		<template v-else>{{ part.text }}</template>

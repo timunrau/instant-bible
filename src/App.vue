@@ -3,7 +3,6 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import ScriptureChapter from './components/ScriptureChapter.vue'
 import InlineNodes from './components/InlineNodes.vue'
 import ReaderSettings from './components/ReaderSettings.vue'
-import TranslationPicker from './components/TranslationPicker.vue'
 import { useReader } from './composables/useReader'
 import { useGestures } from './composables/useGestures'
 import { useVisualViewport } from './composables/useVisualViewport'
@@ -18,29 +17,24 @@ import {
 	writeJson,
 	type Settings,
 } from './lib/persistence'
-import type { Anchor, Chapter, Inline, Passage, Translation } from './lib/types'
+import type { Anchor, Chapter, Inline, Passage } from './lib/types'
 
 const props = defineProps<{
 	initial: Chapter
 	anchor: Anchor
-	pendingVersion?: string
 	initialPassage?: Passage
 }>()
 const reader = useReader(
 	props.initial,
 	props.anchor,
-	props.pendingVersion,
 	props.initialPassage,
 )
 const {
 	chapters,
 	current,
-	version,
 	selected,
 	indicated,
 	status,
-	retry,
-	downloading,
 } = reader
 const gestures = useGestures(
 	reader.toggle,
@@ -50,15 +44,12 @@ const gestures = useGestures(
 const settings = ref(readSettings())
 const viewportStyle = useVisualViewport()
 const referenceOpen = ref(false),
-	settingsOpen = ref(false),
-	translationsOpen = ref(false)
+	settingsOpen = ref(false)
 const picker = ref<HTMLElement>(),
 	input = ref<HTMLInputElement>(),
 	settingsPanel = ref<HTMLElement>()
 const typed = ref(''),
 	error = ref('')
-const installed = ref<string[]>(['BSB'])
-const metadata = ref<Translation>()
 const copied = ref(false),
 	shared = ref(false),
 	copyError = ref('')
@@ -99,11 +90,6 @@ function openReference(event?: Event) {
 	input.value!.select()
 }
 function close() {
-	if (translationsOpen.value) {
-		translationsOpen.value = false
-		nextTick(() => input.value?.focus({ preventScroll: true }))
-		return
-	}
 	note.value?.trigger.focus({ preventScroll: true })
 	note.value = undefined
 	referenceOpen.value = false
@@ -112,7 +98,6 @@ function close() {
 }
 async function openSettings(event: Event) {
 	focusReturn = event.currentTarget as HTMLElement
-	metadata.value = await repository.metadata(version.value)
 	settingsOpen.value = true
 	await nextTick()
 	settingsPanel.value
@@ -128,12 +113,6 @@ async function submit() {
 	}
 	close()
 	await reader.navigate(passage)
-}
-async function chooseVersion(target: string) {
-	translationsOpen.value = false
-	// Keep the draft exactly as typed. Switching doesn't submit or destroy it.
-	await reader.switchVersion(target)
-	if (referenceOpen.value) input.value?.focus({ preventScroll: true })
 }
 async function followNoteReference(passage: Passage) {
 	close()
@@ -164,25 +143,26 @@ async function selectionText() {
 		...new Map(refs.map((r) => [`${r.book}.${r.chapter}`, r])).values(),
 	]
 	const data = await Promise.all(
-		groups.map((r) => repository.chapter(version.value, r.book, r.chapter)),
+		groups.map((r) => repository.chapter(r.book, r.chapter)),
 	)
-	return { text: copyText(refs, data, version.value), refs }
+	return { text: copyText(refs, data), refs }
 }
 async function copy(share = false) {
 	copyError.value = ''
 	try {
 		const { text, refs } = await selectionText()
 		const url =
-			location.origin + passageUrl({ ...refs[0]!, verses: refs }, version.value)
+			location.origin + passageUrl({ ...refs[0]!, verses: refs })
+		const payload = share ? `${text}\n${url}` : text
 		if (share && navigator.share) {
 			try {
-				await navigator.share({ text, url })
+				await navigator.share({ text: payload })
 				return
 			} catch (e) {
 				if (e instanceof Error && e.name === 'AbortError') return
 			}
 		}
-		await writeClipboard(share ? `${text}\n\n${url}` : text)
+		await writeClipboard(payload)
 		if (share) shared.value = true
 		else copied.value = true
 		clearTimeout(confirmationTimer)
@@ -259,9 +239,6 @@ watch(
 	},
 	{ deep: true },
 )
-watch(version, async () => {
-	installed.value = await repository.installedVersions()
-})
 watch(selected, () => {
 	copied.value = false
 	shared.value = false
@@ -275,9 +252,6 @@ onMounted(() => {
 		'change',
 		systemTheme,
 	)
-	void repository.installedVersions().then((v) => {
-		installed.value = v
-	})
 })
 onUnmounted(() => {
 	window.removeEventListener('keydown', keydown)
@@ -300,7 +274,7 @@ onUnmounted(() => {
 	>
 		<ScriptureChapter
 			v-for="chapter in chapters"
-			:key="`${version}:${chapter.book}:${chapter.number}`"
+			:key="`${chapter.book}:${chapter.number}`"
 			:chapter="chapter"
 			:selected="selected"
 			:indicated="indicated"
@@ -316,16 +290,7 @@ onUnmounted(() => {
 		>
 			{{ chapterLabel(current.book, current.chapter) }}
 		</button>
-		<span v-if="status && !referenceOpen" class="download-status" role="status"
-			>{{ status
-			}}<button
-				v-if="retry"
-				aria-label="Retry translation download"
-				@click="retry"
-			>
-				Retry
-			</button></span
-		>
+		<span v-if="status" class="reader-status" role="status">{{ status }}</span>
 		<button
 			class="settings-control"
 			aria-label="Reader settings"
@@ -363,15 +328,6 @@ onUnmounted(() => {
 			><button aria-label="Close reference picker" @click="close">✕</button>
 		</div>
 		<form @submit.prevent="submit">
-			<button
-				type="button"
-				class="version-control"
-				aria-label="Choose translation"
-				:aria-expanded="translationsOpen"
-				@click="translationsOpen = !translationsOpen"
-			>
-				{{ version }}
-			</button>
 			<input
 				ref="input"
 				v-model="typed"
@@ -391,19 +347,9 @@ onUnmounted(() => {
 		<p v-if="error" id="reference-error" class="reference-error" role="alert">
 			{{ error }}
 		</p>
-		<span v-if="status" class="picker-status" role="status"
-			>{{ status }} <button v-if="retry" @click="retry">Retry</button></span
-		>
-		<TranslationPicker
-			v-if="translationsOpen"
-			:installed="installed"
-			:active="version"
-			:disabled="downloading"
-			@choose="chooseVersion"
-		/>
 	</section>
 	<section
-		v-if="settingsOpen && metadata"
+		v-if="settingsOpen"
 		ref="settingsPanel"
 		class="panel settings-panel"
 		role="dialog"
@@ -415,7 +361,6 @@ onUnmounted(() => {
 		</button>
 		<ReaderSettings
 			v-model="settings"
-			:translation="metadata"
 			@before-reload="reader.save(false)"
 		/>
 	</section>
@@ -437,7 +382,7 @@ onUnmounted(() => {
 			<InlineNodes
 				:nodes="note.node.children"
 				:notes="false"
-				:reference-version="version"
+				link-references
 				@navigate="followNoteReference"
 			/>
 		</p>

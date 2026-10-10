@@ -8,7 +8,6 @@ import ScriptureChapter from '../../src/components/ScriptureChapter.vue'
 import ReaderSettings from '../../src/components/ReaderSettings.vue'
 import type { BibleBook } from '../../src/lib/types'
 import { defaults } from '../../src/lib/persistence'
-import metadata from '../../src/data/bsb-metadata.json'
 import assets from '../../src/data/bsb-assets.json'
 const book = (id: string): BibleBook =>
 	JSON.parse(
@@ -77,34 +76,40 @@ describe('Scripture semantic normalization', () => {
 describe('plain-text Scripture copying', () => {
 	it('copies skipped verses as John 3:16, 18–19 with subsequent inline numbers', () => {
 		const p = parseReference('John3:19,16,18')!
-		const text = copyText(p.verses, [chapter], 'BSB')
+		const text = copyText(p.verses, [chapter])
 		expect(text).toMatch(/^For God so loved/)
 		expect(text).toContain('18 Whoever believes')
 		expect(text).toContain('19 And this is the verdict')
-		expect(text).toMatch(/\n\nJohn 3:16, 18–19 BSB$/)
+		expect(text).toMatch(/(?<!\n)\nJohn 3:16, 18–19 BSB$/)
 		expect(text).not.toContain('16 For')
 		expect(text).not.toContain('God’s Love for the World')
 	})
-	it('keeps meaningful paragraphs without putting every verse on its own line', () => {
+	it('joins selected text into one paragraph without putting every verse on its own line', () => {
 		const text = copyText(
 			parseReference('John3:16-18')!.verses,
 			[chapter],
-			'BSB',
 		)
 		expect(text).toMatch(/17 For God/)
 		expect(text).not.toMatch(/\n17 /)
 	})
+	it.each(['Genesis1:31', 'Genesis1:26-31'])('flattens source paragraph breaks when copying %s', (reference) => {
+		const text = copyText(parseReference(reference)!.verses, [book('gen').chapters[0]!])
+		const lines = text.split('\n')
+		expect(lines).toHaveLength(2)
+		expect(lines[0]).toContain('And God looked upon all that He had made')
+		expect(lines[0]).toContain('And there was evening, and there was morning — the sixth day.')
+	})
 	it('flattens poetry and excludes notes and section headings', () => {
 		const c = book('psa').chapters[22]!
-		const text = copyText(parseReference('Psalm23:1-6')!.verses, [c], 'BSB')
+		const text = copyText(parseReference('Psalm23:1-6')!.verses, [c])
 		expect(text).toMatch(/^The LORD is my shepherd/)
 		expect(text).toContain('2 He makes me lie down')
-		expect(text.split('\n\n')).toHaveLength(2)
+		expect(text.split('\n')).toHaveLength(2)
 		expect(text).not.toContain('A Psalm of David')
 	})
 	it('numbers a split semantic verse only once', () => {
 		const c = book('gen').chapters[0]!
-		const text = copyText(parseReference('Gen1:26-28')!.verses, [c], 'BSB')
+		const text = copyText(parseReference('Gen1:26-28')!.verses, [c])
 		expect(text.match(/27 /g)).toHaveLength(1)
 		expect(text).not.toContain('Cited in Matthew')
 	})
@@ -201,7 +206,6 @@ describe('semantic Scripture rendering', () => {
 		const w = mount(ReaderSettings, {
 			props: {
 				modelValue: defaults,
-				translation: metadata,
 			},
 		})
 		const b = w.findAll('button').find((b) => b.text() === 'Dark')!
@@ -211,6 +215,7 @@ describe('semantic Scripture rendering', () => {
 		})
 		expect(w.findAll('button[aria-label^="Text size"]')).toHaveLength(6)
 		expect(w.text()).toContain('BSB Publishing')
+		expect(w.text()).not.toContain('Scripture via')
 		expect(w.text()).toContain('v0.1.0 · test')
 	})
 })

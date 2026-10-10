@@ -34,11 +34,6 @@ test('reference controls follow the keyboard viewport, including browser panning
 		await expect(input).toBeFocused()
 		await expect(input).toHaveValue('rom 8:28')
 	}
-	await page.getByRole('button', { name: 'Choose translation' }).click()
-	await expect.poll(async () => (await panel.boundingBox())!.y).toBeGreaterThanOrEqual(60)
-	await expect(input).toBeInViewport()
-	await page.getByRole('button', { name: 'Close reference picker' }).click()
-	await expect(input).toBeFocused()
 	await page.getByRole('button', { name: 'Close reference picker' }).click()
 	await page.evaluate(() => {
 		const viewport = window.visualViewport!

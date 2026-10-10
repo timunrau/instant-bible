@@ -9,10 +9,10 @@ import {
 } from './references'
 import type { Passage } from './types'
 export const slug = (book: string) => bookById(book)!.name.replace(/\s+/g, '-')
-export function passageUrl(p: Passage, version: string): string {
+export function passageUrl(p: Passage): string {
 	const refs = ordered(p.verses)
 	const first = refs[0] ?? p
-	const params = new URLSearchParams({ version })
+	const params = new URLSearchParams({ version: 'BSB' })
 	let suffix = p.verse ? `/${p.verse}` : ''
 	if (
 		refs.length &&
@@ -31,7 +31,7 @@ export function passageUrl(p: Passage, version: string): string {
 }
 export function parseUrl(
 	url: URL,
-): { passage: Passage; version: string } | undefined {
+): { passage: Passage; version: 'BSB' } | undefined {
 	if (!url.pathname.startsWith(appBase)) return
 	const pieces = decodeURIComponent(url.pathname.slice(appBase.length))
 		.split('/').filter(Boolean)
@@ -53,6 +53,6 @@ export function parseUrl(
 	}
 	return {
 		passage,
-		version: (url.searchParams.get('version') || 'BSB').toUpperCase(),
+		version: 'BSB',
 	}
 }

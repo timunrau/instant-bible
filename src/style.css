@@ -176,7 +176,9 @@ a {
 	-webkit-box-decoration-break: clone;
 }
 .verse.selected {
-	background: var(--highlight);
+	text-decoration: underline dotted;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 0.2em;
 }
 .verse.indicated:not(.selected) {
 	background: var(--highlight);
@@ -232,14 +234,9 @@ a {
 	min-width: 56px;
 	min-height: 48px;
 }
-.download-status {
+.reader-status {
 	font-size: 0.72rem;
 	max-width: 44vw;
-}
-.download-status button {
-	padding: 4px;
-	min-width: 0;
-	font-size: 0.75rem;
 }
 .selection-count {
 	flex: 1;
@@ -322,11 +319,6 @@ a {
 	outline: none;
 	border-bottom-color: var(--foreground);
 }
-.version-control {
-	font-size: 0.78rem;
-	font-weight: 600;
-	padding: 10px 4px;
-}
 .go {
 	font-weight: 500;
 	padding: 10px 4px;
@@ -337,11 +329,6 @@ a {
 	margin: 8px 0 0;
 	padding: 8px 4px;
 	min-height: 34px;
-}
-.picker-status {
-	display: block;
-	font-size: 0.75rem;
-	color: var(--muted);
 }
 .panel-close {
 	position: absolute;
@@ -393,9 +380,6 @@ a {
 .attribution p {
 	margin: 0 0 2px;
 }
-.source-credit {
-	padding-top: 5px;
-}
 .build-info {
 	font-size: 0.67rem;
 	color: var(--muted);
@@ -408,37 +392,6 @@ a {
 	font-size: 0.72rem;
 	color: var(--muted);
 	margin: 0;
-}
-.translation-list {
-	margin-top: 12px;
-	border-top: 1px solid var(--line);
-	padding-top: 18px;
-}
-.translation-list h2 {
-	font-size: 0.85rem;
-	margin-bottom: 8px;
-}
-.translation-list > button {
-	display: flex;
-	gap: 12px;
-	align-items: center;
-	text-align: left;
-	width: 100%;
-	padding: 14px 2px;
-	font-size: 0.8rem;
-}
-.translation-list small {
-	display: block;
-	margin-top: 4px;
-	font-size: 0.65rem;
-	color: var(--muted);
-}
-.translation-abbr {
-	min-width: 40px;
-	font-weight: 500;
-}
-.translation-list > button > span:nth-child(2) {
-	flex: 1;
 }
 .note-popover {
 	font-family: 'Source Serif 4', Georgia, serif;

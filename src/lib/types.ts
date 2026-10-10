@@ -51,7 +51,7 @@ export interface Translation {
 }
 export interface Anchor extends VerseRef {
 	fraction: number
-	version: string
+	version: 'BSB'
 	chapterStart?: boolean
 	fragment?: number
 }

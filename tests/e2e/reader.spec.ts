@@ -64,7 +64,7 @@ test('the reference sheet has no duplicate interpretation or hint row', async ({
 	for (const draft of ['Genesis 1', 'rom 8:28', '']) {
 		await input.fill(draft)
 		await expect(panel.locator('.interpretation, .input-hint')).toHaveCount(0)
-		await expect(panel.getByRole('button')).toHaveCount(3)
+		await expect(panel.getByRole('button')).toHaveCount(2)
 	}
 })
 test('Psalm verse 1 navigation and selection start with Scripture after the descriptive heading', async ({
@@ -276,13 +276,13 @@ test('copies skipped verses in canonical order as prose and shares a full deep l
 		() => (window as unknown as { lastCopy: string }).lastCopy,
 	)
 	expect(content).toMatch(/^For God so loved/)
-	expect(content).toMatch(/John 3:16, 18–19 BSB$/)
+	expect(content).toMatch(/(?<!\n)\nJohn 3:16, 18–19 BSB$/)
 	await page.getByRole('button', { name: 'Share', exact: true }).click()
 	const share = await page.evaluate(
 		() => (window as unknown as { lastCopy: string }).lastCopy,
 	)
 	expect(share).toContain(content)
-	expect(share).toContain('/John/3/16,18-19?version=BSB')
+	expect(share).toBe(`${content}\n${new URL('/John/3/16,18-19?version=BSB', page.url()).href}`)
 })
 test('preserves native text selection and ignores drag and long-press verse gestures', async ({
 	page,
@@ -445,3 +445,44 @@ test('a long press does not toggle verse selection', async ({ page }) => {
   await verse.dispatchEvent('pointerup', { pointerType: 'touch', clientX: 100, clientY: 100 })
   await expect(page.getByRole('button', { name: 'Copy', exact: true })).toHaveCount(0)
 })
+
+for (const outcome of ['success', 'failed', 'cancelled'] as const) {
+	test(`native sharing ${outcome} puts the reference and link on separate lines`, async ({ page }) => {
+		await page.evaluate((outcome) => {
+			const state = window as unknown as { lastShare: ShareData; lastCopy?: string }
+			Object.defineProperty(navigator, 'share', { configurable: true, value: async (data: ShareData) => {
+				state.lastShare = data
+				if (outcome !== 'success') throw new DOMException('Share failed', outcome === 'cancelled' ? 'AbortError' : 'NotAllowedError')
+			} })
+			Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (text: string) => { state.lastCopy = text } } })
+		}, outcome)
+		await jump(page, 'John3:16')
+		await page.locator('[data-verse="jhn.3.16"]').click()
+		await page.getByRole('button', { name: 'Share', exact: true }).click()
+		const state = await page.evaluate(() => {
+			const state = window as unknown as { lastShare: ShareData; lastCopy?: string }
+			return { shared: state.lastShare, copied: state.lastCopy }
+		})
+		expect(state.shared.text).toMatch(/[^\n]\nJohn 3:16 BSB\nhttps?:\/\/[^\n]+\/John\/3\/16\?version=BSB$/)
+		expect(state.shared.url).toBeUndefined()
+		if (outcome === 'failed') expect(state.copied).toBe(state.shared.text)
+		else expect(state.copied).toBeUndefined()
+	})
+}
+
+for (const mode of ['Light', 'Dark'] as const) {
+	test(`selected verse fragments have a visible dotted underline in ${mode} theme`, async ({ page }) => {
+		await page.getByRole('button', { name: 'Reader settings', exact: true }).click()
+		await page.getByRole('button', { name: mode, exact: true }).click()
+		await page.getByRole('button', { name: 'Close settings' }).click()
+		await jump(page, 'Genesis1:27')
+		await page.locator('[data-verse="gen.1.27"]').first().click()
+		const fragments = page.locator('[data-verse="gen.1.27"]')
+		await expect(fragments).toHaveCount(3)
+		for (const fragment of await fragments.all()) {
+			await expect(fragment).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+			await expect(fragment).toHaveCSS('text-decoration-style', 'dotted')
+			await expect(fragment).toHaveCSS('text-decoration-thickness', '2px')
+		}
+	})
+}

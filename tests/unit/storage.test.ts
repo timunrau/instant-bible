@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { BibleRepository, catalog } from '../../src/lib/bible'
-import { books } from '../../src/lib/books'
+import { BibleRepository } from '../../src/lib/bible'
+import assets from '../../src/data/bsb-assets.json'
 import {
 	defaults,
 	readAnchor,
@@ -35,74 +35,32 @@ function memoryStorage() {
 		},
 	} as unknown as CacheStorage
 }
-describe('atomic whole-Bible installed state', () => {
-	it('always treats bundled BSB as installed even without Cache Storage', async () =>
-		expect(await new BibleRepository(undefined).installed(catalog[0]!)).toBe(
-			true,
-		))
-	it('never considers partial/interrupted optional data installed', async () => {
-		const storage = memoryStorage(),
-			repo = new BibleRepository(storage),
-			web = catalog.find((t) => t.abbreviation === 'WEB')!
-		const cache = await storage.open('bible-data-v1-eng_web')
-		await cache.put('/bibles/v1/WEB/gen.json', Response.json({}))
-		expect(await repo.installed(web)).toBe(false)
-		await cache.put(
-			'/bibles/v1/WEB/metadata.json',
-			Response.json({ format: 1, books: books.map((b) => b.id) }),
-		)
-		expect(await repo.installed(web)).toBe(false)
+describe('bundled BSB storage', () => {
+	it('loads bundled content without Cache Storage and reuses in-memory books', async () => {
+		const repo = new BibleRepository(undefined)
+		const data = { format: 1, book: 'jhn', chapters: [{ book: 'jhn', number: 3, blocks: [] }] }
+		const network = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json(data))
+		expect(await repo.loadBook('jhn')).toEqual(data)
+		expect(await repo.loadBook('jhn')).toEqual(data)
+		expect(network).toHaveBeenCalledExactlyOnceWith(assets.jhn)
+	})
+	it('allows retry after a failed bundled-book request', async () => {
+		const repo = new BibleRepository(undefined)
+		vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('', { status: 503 }))
+			.mockResolvedValueOnce(Response.json({ format: 1, book: 'jhn', chapters: [{}] }))
+		await expect(repo.loadBook('jhn')).rejects.toThrow('unavailable')
+		await expect(repo.loadBook('jhn')).resolves.toMatchObject({ book: 'jhn' })
+	})
+	it('rejects incompatible bundled content', async () => {
+		vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ format: 0, book: 'jhn', chapters: [{}] }))
+		await expect(new BibleRepository(undefined).loadBook('jhn')).rejects.toThrow('Incompatible')
+	})
+	it('removes legacy optional caches while preserving the BSB precache and unrelated caches', async () => {
+		const storage = memoryStorage(), repo = new BibleRepository(storage)
+		for (const name of ['bible-data-v0-eng_web', 'bible-data-v1-eng_web', 'workbox-precache-v2', 'unrelated-app-cache'])
+			await storage.open(name)
 		await repo.cleanup()
-		expect(await storage.keys()).toEqual([])
-	})
-	it('requires all 66 books plus compatible metadata before exposing an installation', async () => {
-		const storage = memoryStorage(),
-			repo = new BibleRepository(storage),
-			web = catalog.find((t) => t.abbreviation === 'WEB')!
-		const cache = await storage.open('bible-data-v1-eng_web')
-		for (const book of books)
-			await cache.put(
-				`/bibles/v1/WEB/${book.id}.json`,
-				Response.json({ format: 1 }),
-			)
-		expect(await repo.installed(web)).toBe(false)
-		await cache.put(
-			'/bibles/v1/WEB/metadata.json',
-			Response.json({ format: 1, books: books.map((b) => b.id) }),
-		)
-		expect(await repo.installed(web)).toBe(true)
-		expect(await repo.installedVersions()).toEqual(['BSB', 'WEB'])
-	})
-	it('discards incompatible data rather than migrating it', async () => {
-		const storage = memoryStorage(),
-			repo = new BibleRepository(storage)
-		await storage.open('bible-data-v0-eng_web')
-		await storage.open('unrelated-app-cache')
-		await repo.cleanup()
-		expect(await storage.keys()).toEqual(['unrelated-app-cache'])
-	})
-	it('reads installed optional Scripture solely from Cache Storage', async () => {
-		const storage = memoryStorage(),
-			repo = new BibleRepository(storage)
-		const cache = await storage.open('bible-data-v1-eng_web')
-		await cache.put(
-			'/bibles/v1/WEB/jhn.json',
-			Response.json({
-				format: 1,
-				book: 'jhn',
-				name: 'John',
-				chapters: [{ book: 'jhn', number: 1, blocks: [] }],
-			}),
-		)
-		const network = vi.spyOn(globalThis, 'fetch')
-		expect((await repo.loadBook('WEB', 'jhn')).book).toBe('jhn')
-		expect(network).not.toHaveBeenCalled()
-	})
-	it('cannot remove bundled BSB', async () => {
-		const storage = memoryStorage(),
-			repo = new BibleRepository(storage)
-		await repo.remove('BSB')
-		expect(await repo.installed(catalog[0]!)).toBe(true)
+		expect(await storage.keys()).toEqual(['workbox-precache-v2', 'unrelated-app-cache'])
 	})
 })
 describe('small defensive local persistence', () => {
@@ -151,6 +109,11 @@ describe('small defensive local persistence', () => {
 		expect(readAnchor()).toBeUndefined()
 		writeJson('bible-position', a)
 		expect(readAnchor()?.verse).toBe(28)
+	})
+	it('restores an old translation anchor in BSB at the same semantic position', () => {
+		const old = { book: 'rom', chapter: 8, verse: 28, version: 'WEB', fraction: 0.2, fragment: 1 }
+		writeJson('bible-position', old)
+		expect(readAnchor()).toEqual({ ...old, version: 'BSB', chapterStart: false })
 	})
 	it('works when localStorage denies writes', () => {
 		vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {

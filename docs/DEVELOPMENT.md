@@ -30,12 +30,12 @@ npm run check
 | `npm run test:visual` | Canonical screenshots |
 | `npm run test:visual:update` | Deliberate baseline regeneration; inspect all differences |
 | `npm run bible:validate` | All BSB books/chapters/verses, omissions and SHA-256 checksums |
-| `npm run bible:update-bsb` | Fetch official BSB HTML, normalize, regenerate assets/index/catalog/fonts |
+| `npm run bible:update-bsb` | Fetch official BSB HTML, normalize, regenerate assets/index/fonts |
 | `npm run build` | Typecheck and production build/PWA precache |
 | `npm run bundle:check` | Fail above 75 KiB gzipped application JS |
 | `npm run icons:generate` | Rebuild favicon/PWA/Apple icons from SVG master |
 
-BSB assets and metadata are committed. Normal CI/builds never contact fetch(bible). Only the updater and optional translation installation need its network API. The updater uses supported `FetchClient`/`BibleBookHtml.get_chapter()` interfaces. It preserves source structure and records canonical verse omissions without inventing text. Attribution/license details live in reader settings. Fonts are bundled under the SIL Open Font License.
+BSB assets and metadata are committed. Normal CI/builds never contact fetch(bible). Only the development updater needs its network API; the reader supports bundled BSB only. The updater uses supported `FetchClient`/`BibleBookHtml.get_chapter()` interfaces. It preserves source structure and records canonical verse omissions without inventing text. Attribution/license details live in reader settings. Fonts are bundled under the SIL Open Font License.
 
 Visual baselines include macOS and Linux. For CI-matching updates:
 
@@ -45,9 +45,9 @@ docker run --rm -v "$PWD/tests/e2e/visual.spec.ts-snapshots:/app/tests/e2e/visua
 docker run --rm instant-bible:test
 ```
 
-Review screenshots before committing. Tests mock optional-download transport with real BSB data; those fixtures do not claim to be another translation's text. Offline tests install the production service worker, disable the browser network, and navigate/reload unseen BSB passages.
+Review screenshots before committing. Offline tests install the production service worker, disable the browser network, and navigate/reload unseen BSB passages.
 
-The app JS budget includes the lazy fetch(bible) client, excludes Bible/font/static assets and generated service-worker code, and is intentionally strict: current output is approximately 55 KiB gzip against a 75 KiB limit.
+The app JS budget excludes Bible/font/static assets and generated service-worker code. The BSB-only reader has no runtime fetch(bible) client; current output is approximately 41 KiB gzip against a 75 KiB limit.
 
 ## Self-hosting with Docker
 
@@ -74,13 +74,13 @@ The app is also hosted at [Instant Bible on GitHub Pages](https://timunrau.githu
 
 `npm run build:pages` builds `dist` for `/instant-bible/`; set `BASE_PATH=/` when building for a custom domain at the root. Bible requests, navigation/share URLs, icons, fonts, manifest and service worker use the deployment base. Docker builds continue to use `/`.
 
-Pages serves `404.html` (a copy of the reader shell) for direct passage links without a redirect. First-time deep-link requests have HTTP status 404 but open the requested Scripture normally; after installation, the service worker serves the shell for navigation and offline reloads. Pages controls HTTP cache headers; the nginx-specific headers and `/healthz` apply only to Docker hosting. `npm run test:pages`, also included in `npm run check`, verifies desktop/mobile direct links against a static Pages-style server, optional installs, history, and offline restarts.
+Pages serves `404.html` (a copy of the reader shell) for direct passage links without a redirect. First-time deep-link requests have HTTP status 404 but open the requested Scripture normally; after installation, the service worker serves the shell for navigation and offline reloads. Pages controls HTTP cache headers; the nginx-specific headers and `/healthz` apply only to Docker hosting. `npm run test:pages`, also included in `npm run check`, verifies desktop/mobile direct links against a static Pages-style server, BSB selection links, history, and offline restarts.
 
 The workflow runs `npm ci` and all quality gates in `Dockerfile.test` so browser and font rendering match the Linux visual baselines, then verifies production container health, deep links, and cache headers. CI publishes only the Pages site. Self-hosting builds its image directly from the checkout.
 
 ## Releases
 
-All new commits and PR titles use Conventional Commits. `npm ci` installs the local commit-message hook; `npm run commits:check` validates commits since the last legacy commit (`9b3e387`). CI also checks PR titles so squash merges retain a valid release type. Existing history is kept intact.
+All new commits and PR titles use Conventional Commits. `npm ci` installs the local commit-message hook; `npm run commits:check` validates commits since the last legacy commit (`9b3e387`), with one exact-hash exception for the already-pushed README correction `715fda5`. New commits keep the full Conventional Commit rules. CI also checks PR titles so squash merges retain a valid release type. Existing history is kept intact.
 
 After checks pass on `main`, CI runs semantic-release with the same plugin set as rum1n8. It seeds `v0.1.0` at the last legacy commit on its first run, then uses `fix:`/`perf:` for patch releases, `feat:` for minor releases, and `!`/`BREAKING CHANGE:` for major releases. `refactor:`, `build:`, and `chore(deps):` also trigger patches. Documentation, test, and CI-only changes do not bump the version. Versions are automatic; do not edit them manually.
 
@@ -88,6 +88,6 @@ CI commits `package.json`, `package-lock.json`, and `CHANGELOG.md`, tags the rel
 
 ## Architecture and durable contracts
 
-Vue 3 + strict TypeScript + Vite, plain CSS, Vitest/Vue Test Utils, and Playwright. Small pure modules handle references, URLs, ordering, clipboard prose and persistence. Semantic nodes are rendered by Vue; remote HTML is normalized through an allowlist and never inserted with `v-html`. The reader uses a bounded stable chapter window and semantic verse anchors for persistence/history/typography. Cache Storage stores optional immutable Bible data with a final whole-Bible metadata marker; localStorage contains only settings/position. There is no IndexedDB or heavyweight state library.
+Vue 3 + strict TypeScript + Vite, plain CSS, Vitest/Vue Test Utils, and Playwright. Small pure modules handle references, URLs, ordering, clipboard prose and persistence. Semantic nodes are rendered by Vue; source HTML is normalized through an allowlist and never inserted with `v-html`. The reader uses a bounded stable chapter window and semantic verse anchors for persistence/history/typography. The service worker precaches the immutable bundled BSB assets; localStorage contains only settings/position. Legacy optional-translation caches are cleaned up in the background. There is no IndexedDB or heavyweight state library.
 
 Read [PRODUCT_SPEC](PRODUCT_SPEC.md), [source review](SOURCE_REVIEW.md), [AGENTS.md](../AGENTS.md), and the human-readable tests in `tests/unit` and `tests/e2e` before changing behavior. Scope stays limited to reading, passage navigation, temporary selection, copy/share, and reader settings.

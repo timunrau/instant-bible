@@ -3,13 +3,13 @@
 Ever needed to access a Bible verse in the moment but your Bible app took forever to load? And then when it finally did open, you had to click through a bunch of slow screens to get to the verse you wanted? NO MORE! Instant Bible is built for one thing, and one thing only: to access and share scripture as fast as possible.
 
 - **Type the reference.** No slow and clunky book-chapter-verse picker.
-- **Works offline.** Your chosen translation is downloaded automatically.
+- **Works offline.** The Berean Standard Bible (BSB) is bundled and ready to read.
 - **Installable on mobile.** Add to your home screen for quick access.
 - **Powerful on desktop.** Keyboard shortcuts make it even faster to access and share scripture.
-  - `/` opens the reference picker.
-  - Left and right arrows navigate between chapters.
-  - Press Ctrl+C or Cmd+C to copy selected text to the clipboard.
-  - `Esc` closes open modals or deslects text.
+	- `/` opens the reference picker.
+	- Left and right arrows navigate between chapters.
+	- Press Ctrl+C or Cmd+C to copy selected text to the clipboard.
+	- `Esc` closes open modals or deslects text.
 - **No bloat.** Only the features you need and no more.
 
 **[Read now →](https://timunrau.github.io/instant-bible/)**

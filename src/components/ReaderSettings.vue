@@ -2,10 +2,9 @@
 import { ref } from 'vue'
 import { updateApp } from '../lib/update'
 import type { Settings } from '../lib/persistence'
-import type { Translation } from '../lib/types'
+import translation from '../data/bsb-metadata.json'
 const props = defineProps<{
 	modelValue: Settings
-	translation: Translation
 }>()
 const emit = defineEmits<{
 	'update:modelValue': [value: Settings]
@@ -101,12 +100,6 @@ async function updateVersion() {
 					license.name
 				}}</a></span
 			>
-			<p class="source-credit">
-				Scripture via
-				<a href="https://fetch.bible" target="_blank" rel="noreferrer"
-					>fetch(bible)</a
-				>
-			</p>
 		</div>
 		<button
 			class="build-info"

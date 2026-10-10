@@ -131,5 +131,3 @@ await cp(
 console.log(
 	'Deterministic BSB assets, canonical index, metadata, and fonts written.',
 )
-
-await import('./update-catalog')
