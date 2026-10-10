@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { books } from '../../src/lib/books'
+import { bookCompletion } from '../../src/lib/bookCompletion'
 import {
 	fromId,
 	parseReference,
@@ -13,6 +14,8 @@ import { parseUrl, passageUrl } from '../../src/lib/urls'
 // Extend this table whenever reference behavior changes. Inputs must be consumed completely.
 const valid: [string, string][] = [
 	['john', 'John 1'],
+	['joh', 'John 1'],
+	['1Cor', '1 Corinthians 1'],
 	['john 3', 'John 3'],
 	['john3', 'John 3'],
 	['john 3:', 'John 3'],
@@ -79,6 +82,28 @@ const invalid = [
 	'John 3:16; garbage',
 	'John 3:16; Matthew 99',
 ]
+describe('inline book completion', () => {
+	it.each([
+		['joh', 'John', 'n'],
+		['JOH', 'John', 'n'],
+		['ps', 'Psalm', 'alm'],
+		['1 Cor', '1 Corinthians', 'inthians'],
+		['1Cor', '1 Corinthians', 'inthians'],
+		['  2   Cor', '2 Corinthians', 'inthians'],
+		['phil', 'Philippians', 'ippians'],
+		['phile', 'Philemon', 'mon'],
+		['song of', 'Song of Solomon', ' Solomon'],
+	])('completes %s as %s with suffix %s', (input, name, suffix) => {
+		expect(bookCompletion(input!)).toEqual({ name, suffix })
+	})
+	it.each([
+		'', 'j', 'jo', 'ph', '1', 'John', 'John 3', 'John3', 'John 3:16',
+		'John 3:16-18', 'John 3:16,18', 'joh ', 'jn', '1jn', 'first john',
+		'John 3; Act', 'xyz', 'j.o.h',
+	])('leaves %s alone', (input) => {
+		expect(bookCompletion(input)).toBeUndefined()
+	})
+})
 describe('local Bible reference interpretation', () => {
 	it.each(valid)('interprets "%s" as %s', (input, canonical) =>
 		expect(passageLabel(parseReference(input)!)).toBe(canonical),

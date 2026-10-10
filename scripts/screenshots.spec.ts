@@ -22,7 +22,8 @@ test('capture README screenshots', async ({ page }, testInfo) => {
 	await page.getByRole('button', { name: 'Open reference picker' }).click()
 	const input = page.getByRole('textbox', { name: 'Bible reference' })
 	await expect(input).toBeFocused()
-	await input.fill('John 3:16')
+	await input.fill('joh')
+	await expect(page.getByRole('button', { name: 'Complete John', exact: true })).toHaveText('n')
 	await capture('reference')
 	await page.getByRole('button', { name: 'Close reference picker' }).click()
 

@@ -120,7 +120,6 @@ describe('semantic Scripture rendering', () => {
 			props: {
 				chapter,
 				selected: new Set<string>(),
-				indicated: new Set<string>(),
 			},
 		})
 		expect(w.findAll('.verse-number')).toHaveLength(36)
@@ -136,7 +135,6 @@ describe('semantic Scripture rendering', () => {
 			props: {
 				chapter: data,
 				selected: new Set([`psa.${number}.1`]),
-				indicated: new Set([`psa.${number}.1`]),
 			},
 		})
 		expect(w.findAll('h3 .verse-number')).toHaveLength(0)
@@ -150,8 +148,7 @@ describe('semantic Scripture rendering', () => {
 		expect(
 			fragments.every(
 				(fragment) =>
-					fragment.classes().includes('selected') &&
-					fragment.classes().includes('indicated'),
+					fragment.classes().includes('selected'),
 			),
 		).toBe(true)
 		expect(JSON.stringify(data)).toBe(source)
@@ -161,7 +158,6 @@ describe('semantic Scripture rendering', () => {
 			props: {
 				chapter: book('gen').chapters[0]!,
 				selected: new Set(['gen.1.27']),
-				indicated: new Set<string>(),
 			},
 		})
 		expect(w.findAll('.selected')).toHaveLength(3)
@@ -174,7 +170,6 @@ describe('semantic Scripture rendering', () => {
 			props: {
 				chapter: book('psa').chapters[22]!,
 				selected: new Set<string>(),
-				indicated: new Set<string>(),
 			},
 		})
 		expect(w.find('.poetry.indent-2').exists()).toBe(true)
@@ -182,7 +177,6 @@ describe('semantic Scripture rendering', () => {
 			props: {
 				chapter: book('gen').chapters[0]!,
 				selected: new Set<string>(),
-				indicated: new Set<string>(),
 			},
 		})
 		expect(start.find('h1').text()).toBe('Genesis')
@@ -192,7 +186,6 @@ describe('semantic Scripture rendering', () => {
 			props: {
 				chapter: book('gen').chapters[0]!,
 				selected: new Set<string>(),
-				indicated: new Set<string>(),
 			},
 		})
 		const marker = w.find('button.note-marker')

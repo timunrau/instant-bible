@@ -8,6 +8,7 @@ import { useGestures } from './composables/useGestures'
 import { useVisualViewport } from './composables/useVisualViewport'
 import { repository } from './lib/bible'
 import { chapterLabel, ordered, parseReference } from './lib/references'
+import { bookCompletion } from './lib/bookCompletion'
 import { passageUrl } from './lib/urls'
 import { copyText } from './lib/clipboard'
 import { writeClipboard } from './lib/writeClipboard'
@@ -33,7 +34,6 @@ const {
 	chapters,
 	current,
 	selected,
-	indicated,
 	status,
 } = reader
 const gestures = useGestures(
@@ -46,12 +46,18 @@ const viewportStyle = useVisualViewport()
 const referenceOpen = ref(false),
 	settingsOpen = ref(false)
 const picker = ref<HTMLElement>(),
+	referenceForm = ref<HTMLFormElement>(),
 	input = ref<HTMLInputElement>(),
 	settingsPanel = ref<HTMLElement>()
 const typed = ref(''),
 	error = ref('')
-const copied = ref(false),
-	shared = ref(false),
+const completionReady = ref(false), composing = ref(false)
+const suppressReferenceRing = ref(false)
+const completion = computed(() =>
+	referenceOpen.value && completionReady.value && !composing.value
+		? bookCompletion(typed.value) : undefined,
+)
+const confirmation = ref(''),
 	copyError = ref('')
 const copyShortcut = /Mac/.test(navigator.platform) ? '⌘C' : 'Ctrl+C'
 const note = ref<{
@@ -82,14 +88,46 @@ function openReference(event?: Event) {
 		document.getElementById('reference-control')
 	typed.value = chapterLabel(current.value.book, current.value.chapter)
 	error.value = ''
+	completionReady.value = false
+	composing.value = false
 	referenceOpen.value = true
 	// Already mounted. Reveal and focus in the original tap's synchronous call stack (iOS).
 	picker.value!.hidden = false
+	referenceForm.value!.hidden = false
+	for (const control of picker.value!.querySelectorAll<HTMLElement>('[data-idle-control]')) control.hidden = true
 	input.value!.value = typed.value
 	input.value!.focus({ preventScroll: true })
 	input.value!.select()
 }
+function updateCompletion() {
+	const field = input.value!
+	completionReady.value = document.activeElement === field &&
+		field.selectionStart === field.value.length &&
+		field.selectionEnd === field.value.length && field.scrollLeft === 0
+}
+function acceptCompletion() {
+	if (!completion.value) return
+	typed.value = completion.value.name + ' '
+	error.value = ''
+	// Keep mobile keyboard focus in the tap handler, before Vue renders.
+	input.value!.value = typed.value
+	input.value!.focus({ preventScroll: true })
+	input.value!.setSelectionRange(typed.value.length, typed.value.length)
+	updateCompletion()
+}
+function referenceKeydown(event: KeyboardEvent) {
+	if (event.key === 'Tab' && !event.shiftKey && !event.ctrlKey &&
+		!event.metaKey && !event.altKey && !event.isComposing && completion.value) {
+		event.preventDefault()
+		acceptCompletion()
+	}
+}
 function close() {
+	if (referenceOpen.value) {
+		referenceForm.value!.hidden = true
+		for (const control of picker.value!.querySelectorAll<HTMLElement>('[data-idle-control]')) control.hidden = false
+		picker.value!.hidden = selected.value.size > 0
+	}
 	note.value?.trigger.focus({ preventScroll: true })
 	note.value = undefined
 	referenceOpen.value = false
@@ -111,12 +149,14 @@ async function submit() {
 		input.value?.focus()
 		return
 	}
+	suppressReferenceRing.value = true
 	close()
 	await reader.navigate(passage)
 }
 async function followNoteReference(passage: Passage) {
 	close()
 	await reader.navigate(passage)
+	suppressReferenceRing.value = true
 	document.getElementById('reference-control')?.focus({ preventScroll: true })
 }
 function openNote(
@@ -149,26 +189,31 @@ async function selectionText() {
 }
 async function copy(share = false) {
 	copyError.value = ''
+	const returnFocus = document.activeElement?.closest('.selection-tray')
 	try {
 		const { text, refs } = await selectionText()
 		const url =
 			location.origin + passageUrl({ ...refs[0]!, verses: refs })
 		const payload = share ? `${text}\n${url}` : text
+		let didShare = false
 		if (share && navigator.share) {
 			try {
 				await navigator.share({ text: payload })
-				return
+				didShare = true
 			} catch (e) {
 				if (e instanceof Error && e.name === 'AbortError') return
 			}
 		}
-		await writeClipboard(payload)
-		if (share) shared.value = true
-		else copied.value = true
+		if (!didShare) await writeClipboard(payload)
+		selected.value = new Set()
+		confirmation.value = didShare ? 'Shared' : 'Copied'
+		if (returnFocus) {
+			await nextTick()
+			document.getElementById('reference-control')?.focus({ preventScroll: true })
+		}
 		clearTimeout(confirmationTimer)
 		confirmationTimer = setTimeout(() => {
-			copied.value = false
-			shared.value = false
+			confirmation.value = ''
 		}, 1800)
 	} catch {
 		copyError.value = 'Copy unavailable. Try again.'
@@ -176,6 +221,7 @@ async function copy(share = false) {
 }
 function keydown(event: KeyboardEvent) {
 	if (event.defaultPrevented || event.isComposing) return
+	if (event.key === 'Tab') suppressReferenceRing.value = false
 	if (event.key === 'Escape' && dialog.value) {
 		event.preventDefault()
 		close()
@@ -196,6 +242,10 @@ function keydown(event: KeyboardEvent) {
 			panel?.querySelectorAll<HTMLElement>('button:not(:disabled),input,a') ??
 				[],
 		).filter((e) => e.getClientRects().length)
+		if (settingsOpen.value) {
+			const toggle = document.getElementById('settings-control')
+			if (toggle) controls.unshift(toggle)
+		}
 		if (!controls.length) return
 		const first = controls[0]!,
 			last = controls.at(-1)!
@@ -240,8 +290,6 @@ watch(
 	{ deep: true },
 )
 watch(selected, () => {
-	copied.value = false
-	shared.value = false
 	copyError.value = ''
 })
 const systemTheme = () => applyTheme(settings.value.theme)
@@ -277,30 +325,94 @@ onUnmounted(() => {
 			:key="`${chapter.book}:${chapter.number}`"
 			:chapter="chapter"
 			:selected="selected"
-			:indicated="indicated"
 			@note="openNote"
 		/>
 	</main>
-	<footer v-if="!selected.size" class="bottom-bar" :inert="dialog || undefined">
+	<footer
+		ref="picker"
+		class="bottom-bar reader-bar"
+		:class="{ 'reference-open': referenceOpen, 'settings-open': settingsOpen }"
+		:style="viewportStyle"
+		:hidden="!!selected.size && !referenceOpen"
+		:inert="!!note || undefined"
+		:role="referenceOpen ? 'dialog' : undefined"
+		:aria-modal="referenceOpen ? true : undefined"
+		:aria-label="referenceOpen ? 'Go to a passage' : undefined"
+	>
 		<button
+			v-if="!selected.size"
 			id="reference-control"
-			class="reference-control"
+			class="reference-control glass-control"
+			:class="{ 'suppress-focus-ring': suppressReferenceRing }"
+			data-idle-control
+			:hidden="referenceOpen"
 			aria-label="Open reference picker"
+			:inert="settingsOpen || undefined"
 			@click="openReference"
+			@blur="suppressReferenceRing = false"
 		>
-			{{ chapterLabel(current.book, current.chapter) }}
+			<span>{{ chapterLabel(current.book, current.chapter) }}</span>
 		</button>
-		<span v-if="status" class="reader-status" role="status">{{ status }}</span>
+		<form ref="referenceForm" class="reference-editor glass-control" :hidden="!referenceOpen" @submit.prevent="submit">
+			<div class="reference-field">
+				<input
+					ref="input"
+					v-model="typed"
+					aria-label="Bible reference"
+					:aria-invalid="!!error"
+					:aria-describedby="error ? 'reference-error' : undefined"
+					:aria-description="completion ? `Tab to complete ${completion.name}` : undefined"
+					autocomplete="off"
+					autocapitalize="off"
+					autocorrect="off"
+					:spellcheck="false"
+					enterkeyhint="go"
+					@input="error = ''; updateCompletion()"
+					@select="updateCompletion"
+					@keyup="updateCompletion"
+					@click="updateCompletion"
+					@focus="updateCompletion"
+					@blur="completionReady = false"
+					@scroll="updateCompletion"
+					@compositionstart="composing = true"
+					@compositionend="composing = false; updateCompletion()"
+					@keydown="referenceKeydown"
+				/>
+				<div v-if="completion" class="reference-completion">
+					<span aria-hidden="true">{{ typed }}</span><button
+						type="button"
+						tabindex="-1"
+						:aria-label="`Complete ${completion.name}`"
+						@pointerdown.prevent
+						@click="acceptCompletion"
+					>
+						{{ completion.suffix }}
+					</button>
+				</div>
+			</div>
+			<button type="submit" class="go" aria-label="Go">
+				<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+			</button>
+		</form>
+		<button v-if="referenceOpen" class="reference-close glass-control" aria-label="Close reference picker" @click="close">✕</button>
+		<span v-if="status && !referenceOpen" class="reader-status" role="status">{{ status }}</span>
 		<button
-			class="settings-control"
+			v-if="!selected.size"
+			id="settings-control"
+			class="settings-control glass-control"
+			data-idle-control
+			:hidden="referenceOpen"
 			aria-label="Reader settings"
-			@click="openSettings"
+			:aria-expanded="settingsOpen"
+			aria-controls="settings-panel"
+			@click="settingsOpen ? close() : openSettings($event)"
 		>
 			Aa
 		</button>
+		<p v-if="referenceOpen && error" id="reference-error" class="reference-error" role="alert">{{ error }}</p>
 	</footer>
 	<footer
-		v-else
+		v-if="selected.size"
 		class="bottom-bar selection-tray"
 		:inert="dialog || undefined"
 		aria-label="Verse selection"
@@ -308,53 +420,22 @@ onUnmounted(() => {
 		<span class="selection-count" role="status">{{
 			copyError || `${selected.size} selected`
 		}}</span>
-		<button aria-keyshortcuts="Control+C Meta+C" @click="copy()">{{ copied ? 'Copied' : 'Copy' }}</button>
+		<button aria-keyshortcuts="Control+C Meta+C" @click="copy()">Copy</button>
 		<kbd class="copy-shortcut">{{ copyShortcut }}</kbd>
-		<button @click="copy(true)">{{ shared ? 'Copied' : 'Share' }}</button
+		<button @click="copy(true)">Share</button
 		><button @click="selected = new Set()">Clear</button>
 	</footer>
-	<div v-if="dialog" class="backdrop" aria-hidden="true" @click="close"></div>
-	<section
-		ref="picker"
-		class="panel reference-panel"
-		:style="viewportStyle"
-		:hidden="!referenceOpen"
-		role="dialog"
-		aria-modal="true"
-		aria-label="Go to a passage"
-	>
-		<div class="panel-heading">
-			<span>Go to a passage</span
-			><button aria-label="Close reference picker" @click="close">✕</button>
-		</div>
-		<form @submit.prevent="submit">
-			<input
-				ref="input"
-				v-model="typed"
-				aria-label="Bible reference"
-				:aria-invalid="!!error"
-				:aria-describedby="error ? 'reference-error' : undefined"
-				autocomplete="off"
-				autocapitalize="off"
-				autocorrect="off"
-				:spellcheck="false"
-				enterkeyhint="go"
-				placeholder="Romans 8:28"
-				@input="error = ''"
-			/>
-			<button type="submit" class="go">Go</button>
-		</form>
-		<p v-if="error" id="reference-error" class="reference-error" role="alert">
-			{{ error }}
-		</p>
-	</section>
+	<div v-if="confirmation" class="copy-confirmation" role="status">{{ confirmation }}</div>
+	<div v-if="dialog" class="backdrop" :class="{ 'reference-backdrop': referenceOpen }" aria-hidden="true" @click="close"></div>
 	<section
 		v-if="settingsOpen"
+		id="settings-panel"
 		ref="settingsPanel"
 		class="panel settings-panel"
 		role="dialog"
 		aria-modal="true"
 		aria-label="Reader settings"
+		aria-owns="settings-control"
 	>
 		<button class="panel-close" aria-label="Close settings" @click="close">
 			✕

@@ -6,7 +6,6 @@ import type { Chapter, Fragment, Inline } from '../lib/types'
 const props = defineProps<{
 	chapter: Chapter
 	selected: Set<string>
-	indicated: Set<string>
 }>()
 // Some source headings carry the marker for the Scripture that follows them.
 // Render that number at the first reading fragment without changing source data.
@@ -57,7 +56,6 @@ const emit = defineEmits<{
 					class="verse"
 					:class="{
 						selected: selected.has(fragment.id),
-						indicated: indicated.has(fragment.id),
 					}"
 					><sup
 						v-if="verseNumbers.has(fragment)"

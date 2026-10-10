@@ -19,7 +19,11 @@
 	--line: rgba(0, 0, 0, 0.13);
 	--highlight: rgba(0, 0, 0, 0.1);
 	--subtle: rgba(0, 0, 0, 0.05);
+	--glass: rgba(255, 255, 255, 0.52);
+	--glass-edge: rgba(0, 0, 0, 0.12);
+	--glass-light: rgba(255, 255, 255, 0.64);
 	--origin: 24px;
+	--control-gap: 14px;
 	color-scheme: light;
 	background: var(--background);
 	color: var(--foreground);
@@ -31,6 +35,9 @@
 	--line: rgba(255, 255, 255, 0.2);
 	--highlight: rgba(255, 255, 255, 0.19);
 	--subtle: rgba(255, 255, 255, 0.08);
+	--glass: rgba(12, 12, 12, 0.52);
+	--glass-edge: rgba(255, 255, 255, 0.22);
+	--glass-light: rgba(255, 255, 255, 0.14);
 	color-scheme: dark;
 }
 * {
@@ -180,10 +187,6 @@ a {
 	text-decoration-thickness: 2px;
 	text-underline-offset: 0.2em;
 }
-.verse.indicated:not(.selected) {
-	background: var(--highlight);
-	animation: indicate 2.4s ease-out forwards;
-}
 .note-marker {
 	display: inline;
 	position: relative;
@@ -222,21 +225,110 @@ a {
 	color: var(--muted);
 	font-size: 0.875rem;
 }
+.reader-bar {
+	left: 50%;
+	right: auto;
+	bottom: calc(var(--control-gap) + env(safe-area-inset-bottom));
+	transform: translateX(-50%);
+	width: calc(100% - 2 * max(16px, env(safe-area-inset-left), env(safe-area-inset-right)));
+	max-width: 326px;
+	min-height: 56px;
+	padding: 0;
+	gap: 10px;
+	border: 0;
+	background: transparent;
+}
+.reader-bar .glass-control {
+	min-height: 56px;
+	border: 1px solid var(--glass-edge);
+	border-radius: 30px;
+	background: var(--background);
+	color: var(--foreground);
+	box-shadow: inset 0 1px 0 var(--glass-light), 0 4px 18px rgba(0, 0, 0, 0.1);
+}
+@supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
+	.reader-bar .glass-control {
+		background: linear-gradient(150deg, var(--glass-light), transparent 55%), var(--glass);
+		-webkit-backdrop-filter: blur(12px) saturate(140%);
+		backdrop-filter: blur(12px) saturate(140%);
+	}
+}
+@media (prefers-reduced-transparency: reduce) {
+	.reader-bar .glass-control {
+		background: var(--background);
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+}
+.reader-bar .glass-control:focus-visible {
+	border-radius: 30px;
+}
+.reference-control.suppress-focus-ring:focus-visible {
+	outline: none;
+}
 .reference-control {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	flex: 1;
-	text-align: left;
-	padding-left: 12px;
-	min-height: 48px;
+	min-width: 0;
+	text-align: center;
+	padding: 10px 16px;
+	font-size: 1rem;
+	font-weight: 600;
+}
+.reference-control span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 .settings-control {
 	font-family: 'Source Serif 4', Georgia, serif;
-	font-size: 1.2rem;
+	font-size: 1.375rem;
+	font-weight: 500;
 	min-width: 56px;
-	min-height: 48px;
+	padding: 0;
+}
+.reader-bar.settings-open {
+	z-index: 21;
+}
+.reader-bar.settings-open .reference-control {
+	position: relative;
+}
+.reader-bar.settings-open .reference-control::after {
+	content: '';
+	position: absolute;
+	inset: -1px;
+	border-radius: inherit;
+	background: rgba(0, 0, 0, 0.18);
+	pointer-events: none;
+}
+:root[data-theme='dark'] .reader-bar.settings-open .reference-control::after {
+	background: rgba(0, 0, 0, 0.5);
+}
+.reader-bar .settings-control[aria-expanded='true'] {
+	background: var(--foreground);
+	color: var(--background);
+	border-color: var(--foreground);
+	box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
 }
 .reader-status {
 	font-size: 0.72rem;
 	max-width: 44vw;
+}
+.copy-confirmation {
+	position: fixed;
+	z-index: 10;
+	bottom: calc(92px + env(safe-area-inset-bottom));
+	left: 50%;
+	transform: translateX(-50%);
+	padding: 8px 16px;
+	border: 1px solid #86efac;
+	border-radius: 8px;
+	background: #dcfce7;
+	color: #14532d;
+	font-size: 0.875rem;
+	pointer-events: none;
 }
 .selection-count {
 	flex: 1;
@@ -283,52 +375,89 @@ a {
 	overflow: auto;
 	box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.05);
 }
-.panel-heading {
+.reference-backdrop,
+:root[data-theme='dark'] .reference-backdrop {
+	background: transparent;
+}
+.reader-bar.reference-open {
+	z-index: 30;
+	bottom: calc(var(--control-gap, 14px) + var(--viewport-bottom, 0px) + env(safe-area-inset-bottom));
+}
+.reference-editor {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	color: var(--muted);
-	font-size: 0.8rem;
-	margin: -8px -6px 6px 0;
-}
-.panel-heading button {
-	font-size: 0.9rem;
-}
-.reference-panel {
-	bottom: var(--viewport-bottom, 0px);
-	max-height: min(85dvh, calc(var(--viewport-height, 100dvh) - 16px));
-}
-.reference-panel form {
-	display: flex;
-	gap: 6px;
-	align-items: center;
-}
-.reference-panel input {
 	flex: 1;
-	width: 0;
-	border: 0;
-	border-bottom: 1px solid var(--line);
-	border-radius: 0;
-	background: var(--background);
-	padding: 12px 3px;
-	font-size: 1.08rem;
+	min-width: 0;
+	padding: 0 4px 0 20px;
+}
+.reference-field {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+	font-size: 1rem;
+	font-weight: 600;
 	line-height: 1.4;
+}
+.reference-field input {
+	width: 100%;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	padding: 12px 0;
+	font: inherit;
 	min-width: 0;
 }
-.reference-panel input:focus {
+.reference-field input:focus {
 	outline: none;
-	border-bottom-color: var(--foreground);
+}
+.reference-editor:focus-within {
+	border-color: var(--muted);
+}
+.reference-completion {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	overflow: hidden;
+	white-space: pre;
+	pointer-events: none;
+}
+.reference-completion span {
+	visibility: hidden;
+	flex-shrink: 0;
+}
+.reference-completion button {
+	flex-shrink: 0;
+	min-width: 0;
+	padding: 0;
+	color: var(--muted);
+	pointer-events: auto;
 }
 .go {
-	font-weight: 500;
-	padding: 10px 4px;
+	display: grid;
+	place-items: center;
+	flex: 0 0 48px;
+	min-height: 48px;
+	padding: 0;
+	border-radius: 50%;
+}
+.reference-close {
+	flex: 0 0 56px;
+	padding: 0;
+	font-size: 1rem;
 }
 .reference-error {
+	position: absolute;
+	bottom: 100%;
+	left: 0;
+	right: 0;
 	font-size: 0.8rem;
 	color: var(--foreground);
-	margin: 8px 0 0;
-	padding: 8px 4px;
-	min-height: 34px;
+	background: var(--background);
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	margin: 0 0 10px;
+	padding: 10px 16px;
 }
 .panel-close {
 	position: absolute;
@@ -407,18 +536,10 @@ a {
 	text-underline-offset: 0.15em;
 	padding-block: 0.35em;
 }
-@keyframes indicate {
-	0%,
-	55% {
-		background: var(--highlight);
-	}
-	100% {
-		background: transparent;
-	}
-}
 @media (min-width: 768px) {
 	:root {
 		--origin: 48px;
+		--control-gap: 18px;
 	}
 	.reader {
 		padding-left: 36px;
@@ -427,7 +548,12 @@ a {
 	.book-heading {
 		margin-top: 0.35em;
 	}
-	.bottom-bar {
+	.reader-bar {
+		--control-gap: 18px;
+		width: calc(100% - 64px);
+		bottom: calc(18px + env(safe-area-inset-bottom));
+	}
+	.selection-tray {
 		max-width: 700px;
 		left: 50%;
 		right: auto;
@@ -450,14 +576,6 @@ a {
 		padding: 24px;
 		max-height: calc(100dvh - 120px);
 	}
-	.settings-panel {
-		width: 390px;
-		left: calc(50% + 155px);
-	}
-	.reference-panel {
-		bottom: calc(88px + var(--viewport-bottom, 0px));
-		max-height: min(calc(100dvh - 120px), calc(var(--viewport-height, 100dvh) - 120px));
-	}
 	.note-popover {
 		left: var(--note-left);
 		bottom: var(--note-bottom);
@@ -469,6 +587,27 @@ a {
 	.backdrop {
 		background: rgba(0, 0, 0, 0.05);
 	}
+}
+.settings-panel {
+	left: 50%;
+	right: auto;
+	bottom: calc(var(--control-gap) + 56px + 10px + env(safe-area-inset-bottom));
+	transform: translateX(-50%);
+	width: calc(100% - 2 * max(16px, env(safe-area-inset-left), env(safe-area-inset-right)));
+	max-width: 326px;
+	max-height: calc(100dvh - var(--control-gap) - 56px - 26px - env(safe-area-inset-bottom) - env(safe-area-inset-top));
+	padding: 20px;
+	border-radius: 24px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+	transform-origin: calc(100% - 28px) bottom;
+	animation: settings-open 160ms ease-out;
+}
+.settings-panel .sizes {
+	gap: 0;
+}
+@keyframes settings-open {
+	from { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.96); }
+	to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
 	*,

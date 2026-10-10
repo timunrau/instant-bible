@@ -28,12 +28,13 @@ test('BSB footnote citations jump to their passages and Back restores the prior 
 	await expect.poll(async () => Math.round(await verseTop(page, 'mat.17.5'))).toBe(isMobile ? 24 : 48)
 	await expect(page.locator('.selection-tray')).toHaveCount(0)
 	await expect(page.getByRole('button', { name: 'Open reference picker' })).toBeFocused()
+	await expect(page.getByRole('button', { name: 'Open reference picker' })).toHaveCSS('outline-style', 'none')
 	await page.goBack()
 	await expect(page.getByRole('button', { name: 'Open reference picker' })).toHaveText('2 Peter 1')
 	await expect.poll(async () => Math.abs(await verseTop(page, '2pe.1.17') - top)).toBeLessThan(3)
 })
 
-test('footnote range links work offline and indicate the cited verses without selection', async ({ page, context, isMobile }) => {
+test('footnote range links work offline without highlighting or selection', async ({ page, context, isMobile }) => {
 	await page.evaluate(async () => { await navigator.serviceWorker.ready })
 	await page.reload()
 	await settled(page)
@@ -45,8 +46,8 @@ test('footnote range links work offline and indicate the cited verses without se
 	await note.getByRole('link', { name: 'Mark 10:7–8', exact: true }).click()
 	await expect(page).toHaveURL(/\/Mark\/10\/7-8\?version=BSB$/)
 	await expect.poll(async () => Math.round(await verseTop(page, 'mrk.10.7'))).toBe(isMobile ? 24 : 48)
-	await expect(page.locator('[data-verse="mrk.10.7"]')).toHaveClass(/indicated/)
-	await expect(page.locator('[data-verse="mrk.10.8"]')).toHaveClass(/indicated/)
+	await expect(page.locator('[data-verse="mrk.10.7"]')).not.toHaveClass(/indicated/)
+	await expect(page.locator('[data-verse="mrk.10.8"]')).not.toHaveClass(/indicated/)
 	await expect(page.locator('.selection-tray')).toHaveCount(0)
 })
 

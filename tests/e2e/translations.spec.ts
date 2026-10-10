@@ -27,7 +27,7 @@ test('old translation links open their passage and range in BSB without download
 	await settled(page)
 	await expect(page).toHaveURL(/\/John\/3\/16-18\?version=BSB$/)
 	await expect(page.locator('[data-verse="jhn.3.16"]')).toContainText('For God so loved')
-	await expect(page.locator('[data-verse="jhn.3.18"]')).toHaveClass(/indicated/)
+	await expect(page.locator('[data-verse="jhn.3.18"]')).not.toHaveClass(/indicated/)
 	await expect(page.locator('.selection-tray')).toHaveCount(0)
 	await jump(page, 'Romans8:28')
 	await page.goBack()

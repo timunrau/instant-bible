@@ -14,7 +14,6 @@ export function useReader(
 	const chapters = shallowRef<Chapter[]>([initial])
 	const current = ref({ book: initial.book, chapter: initial.number })
 	const selected = ref(new Set<string>())
-	const indicated = ref(new Set<string>())
 	const status = ref('')
 	let operation = 0
 	let balancing = false
@@ -23,7 +22,6 @@ export function useReader(
 	let programmaticScrollY: number | undefined
 	let scrollFrame = 0
 	let resizeTimer: ReturnType<typeof setTimeout>
-	let indicationTimer: ReturnType<typeof setTimeout>
 	let stableAnchor = initialAnchor
 	const origin = () => (window.innerWidth >= 768 ? 48 : 24)
 	const verseElements = (id: string) =>
@@ -154,7 +152,6 @@ export function useReader(
 		options: {
 			history?: boolean
 			anchor?: Anchor
-			indicate?: boolean
 		} = {},
 	) {
 		status.value = ''
@@ -177,14 +174,6 @@ export function useReader(
 				version: 'BSB' as const,
 			}
 			selected.value = new Set()
-			indicated.value = new Set()
-			clearTimeout(indicationTimer)
-			if (options.indicate !== false && passage.verses.length) {
-				indicated.value = new Set(passage.verses.map(verseId))
-				indicationTimer = setTimeout(() => {
-					indicated.value = new Set()
-				}, 2400)
-			}
 			chapters.value = [destination]
 			current.value = { book: passage.book, chapter: passage.chapter }
 			if (options.history !== false)
@@ -249,7 +238,7 @@ export function useReader(
 		if (anchor)
 			await navigate(
 				{ ...anchor, verses: [] },
-				{ history: false, anchor, indicate: false },
+				{ history: false, anchor },
 			)
 		else await navigate(route.passage, { history: false })
 	}
@@ -277,12 +266,6 @@ export function useReader(
 				},
 			),
 		)
-		if (initialPassage?.verses.length) {
-			indicated.value = new Set(initialPassage.verses.map(verseId))
-			indicationTimer = setTimeout(() => {
-				indicated.value = new Set()
-			}, 2400)
-		}
 		document.title = `${chapterLabel(initial.book, initial.number)} — Bible`
 		document.fonts.ready
 			.then(() => {
@@ -301,14 +284,12 @@ export function useReader(
 		window.removeEventListener('popstate', onPop)
 		window.removeEventListener('pagehide', leave)
 		cancelAnimationFrame(scrollFrame)
-		clearTimeout(indicationTimer)
 		clearTimeout(resizeTimer)
 	})
 	return {
 		chapters,
 		current,
 		selected,
-		indicated,
 		status,
 		capture,
 		save,

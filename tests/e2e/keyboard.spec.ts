@@ -56,6 +56,19 @@ test('slash focuses the picker in the key event and leaves input editing and dia
 	await expect(page).toHaveURL(/\/John\/3\/16\?version=BSB$/)
 })
 
+test('passage submission returns focus without a ring and Tab restores the keyboard indicator', async ({ page }) => {
+	await jump(page, 'John3:16')
+	const reference = page.getByRole('button', { name: 'Open reference picker' })
+	await expect(reference).toBeFocused()
+	await expect(reference).toHaveCSS('outline-style', 'none')
+	await page.keyboard.press('Tab')
+	await expect(page.getByRole('button', { name: 'Reader settings', exact: true })).toBeFocused()
+	await page.keyboard.press('Shift+Tab')
+	await expect(reference).toBeFocused()
+	await expect(reference).toHaveCSS('outline-style', 'solid')
+	await expect(reference).toHaveCSS('outline-width', '2px')
+})
+
 test('Ctrl+C and Cmd+C use semantic verse copying and preserve native copy', async ({ page }) => {
 	await page.evaluate(() => {
 		Object.defineProperty(navigator, 'clipboard', {
@@ -66,11 +79,13 @@ test('Ctrl+C and Cmd+C use semantic verse copying and preserve native copy', asy
 		})
 	})
 	await jump(page, 'John3:16')
-	for (const id of ['jhn.3.19', 'jhn.3.16', 'jhn.3.18'])
-		await page.locator(`[data-verse="${id}"]`).first().click()
 	for (const shortcut of ['Control+c', 'Meta+c']) {
+		for (const id of ['jhn.3.19', 'jhn.3.16', 'jhn.3.18'])
+			await page.locator(`[data-verse="${id}"]`).first().click()
 		await page.keyboard.press(shortcut)
-		await expect(page.getByRole('button', { name: 'Copied', exact: true })).toBeVisible()
+		await expect(page.locator('.copy-confirmation')).toHaveText('Copied')
+		await expect(page.locator('.selected')).toHaveCount(0)
+		await expect(page.locator('.selection-tray')).toHaveCount(0)
 		const text = await page.evaluate(() => (window as unknown as { lastCopy: string }).lastCopy)
 		expect(text).toMatch(/^For God so loved/)
 		expect(text).toContain('18 Whoever believes')

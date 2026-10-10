@@ -55,7 +55,7 @@ test('does not show validation errors before an invalid reference is submitted',
 		page.getByRole('button', { name: 'Open reference picker' }),
 	).toHaveText('Romans 8')
 })
-test('the reference sheet has no duplicate interpretation or hint row', async ({
+test('the inline reference editor has no duplicate interpretation or hint row', async ({
 	page,
 }) => {
 	await page.getByRole('button', { name: 'Open reference picker' }).click()
@@ -66,6 +66,96 @@ test('the reference sheet has no duplicate interpretation or hint row', async ({
 		await expect(panel.locator('.interpretation, .input-hint')).toHaveCount(0)
 		await expect(panel.getByRole('button')).toHaveCount(2)
 	}
+})
+test('the reference pill edits in place with stable bounds for short and long references', async ({ page }) => {
+	const button = page.getByRole('button', { name: 'Open reference picker' })
+	const initial = (await button.boundingBox())!
+	expect(initial.width).toBeLessThanOrEqual(260)
+	await button.click()
+	const editor = page.locator('.reference-editor')
+	const input = page.getByRole('textbox', { name: 'Bible reference' })
+	for (const draft of ['John 3', '2 Thessalonians 3:16-18', 'John 21:25; Acts 1:1-2']) {
+		await input.fill(draft)
+		const bounds = (await editor.boundingBox())!
+		expect(bounds).toEqual(initial)
+		await expect(input).toBeFocused()
+	}
+	await input.fill('')
+	await expect(input).not.toHaveAttribute('placeholder')
+	await page.keyboard.press('Escape')
+	await expect(button).toBeFocused()
+	expect(await button.boundingBox()).toEqual(initial)
+})
+test('inline book completion accepts Tab without submitting and keeps ordinary Tab navigation', async ({ page }) => {
+	await page.getByRole('button', { name: 'Open reference picker' }).click()
+	const input = page.getByRole('textbox', { name: 'Bible reference' })
+	const before = await page.evaluate(() => ({ y: scrollY, url: location.href, history: history.length }))
+	for (const [draft, name, suffix] of [
+		['joh', 'John', 'n'], ['ps', 'Psalm', 'alm'],
+		['1Cor', '1 Corinthians', 'inthians'], ['phil', 'Philippians', 'ippians'],
+	]) {
+		await input.fill(draft!)
+		await expect(page.getByRole('button', { name: `Complete ${name}`, exact: true })).toHaveText(suffix!)
+		await input.press('Tab')
+		await expect(input).toHaveValue(`${name} `)
+		await expect(input).toBeFocused()
+		await expect(page.locator('.reference-completion')).toHaveCount(0)
+	}
+	expect(await page.evaluate(() => ({ y: scrollY, url: location.href, history: history.length }))).toEqual(before)
+	await input.press('Tab')
+	await expect(page.getByRole('button', { name: 'Go', exact: true })).toBeFocused()
+})
+test('tapping inline completion keeps focus synchronous and leaves Enter and Go immediate', async ({ page }) => {
+	await page.getByRole('button', { name: 'Open reference picker' }).click()
+	const input = page.getByRole('textbox', { name: 'Bible reference' })
+	await input.fill('joh')
+	const suggestion = page.getByRole('button', { name: 'Complete John', exact: true })
+	await suggestion.click()
+	await expect(input).toHaveValue('John ')
+	await expect(input).toBeFocused()
+	await input.fill('1Cor')
+	const result = await page.getByRole('button', { name: 'Complete 1 Corinthians', exact: true }).evaluate(button => {
+		;(button as HTMLButtonElement).click()
+		const field = document.querySelector<HTMLInputElement>('.reference-field input')!
+		return { value: field.value, focused: document.activeElement === field, start: field.selectionStart, end: field.selectionEnd }
+	})
+	expect(result).toEqual({ value: '1 Corinthians ', focused: true, start: 14, end: 14 })
+	await input.fill('joh')
+	await input.press('Enter')
+	await expect(page).toHaveURL(/\/John\/1\?version=BSB$/)
+	await page.getByRole('button', { name: 'Open reference picker' }).click()
+	await input.fill('1Cor')
+	await page.getByRole('button', { name: 'Go', exact: true }).click()
+	await expect(page).toHaveURL(/\/1-Corinthians\/1\?version=BSB$/)
+})
+test('completion works offline and stays out of selection, composition and chapter input', async ({ page, context }) => {
+	await page.getByRole('button', { name: 'Open reference picker' }).click()
+	const input = page.getByRole('textbox', { name: 'Bible reference' })
+	await context.setOffline(true)
+	for (const draft of ['jo', 'jn', 'John', 'joh ', 'John 3', 'John3:16', 'John 3:16,18', 'John 3; Act']) {
+		await input.fill(draft)
+		await expect(page.locator('.reference-completion')).toHaveCount(0)
+		await expect(page.getByRole('alert')).toHaveCount(0)
+	}
+	await input.fill('joh')
+	await expect(page.getByRole('button', { name: 'Complete John', exact: true })).toBeVisible()
+	await input.press('ArrowLeft')
+	await expect(page.locator('.reference-completion')).toHaveCount(0)
+	await input.press('ArrowRight')
+	await expect(page.locator('.reference-completion')).toBeVisible()
+	await input.press('Shift+ArrowLeft')
+	await expect(page.locator('.reference-completion')).toHaveCount(0)
+	await input.press('ArrowRight')
+	await expect(page.locator('.reference-completion')).toBeVisible()
+	await input.dispatchEvent('compositionstart')
+	await expect(page.locator('.reference-completion')).toHaveCount(0)
+	await input.dispatchEvent('keydown', { key: 'Tab', isComposing: true })
+	await expect(input).toHaveValue('joh')
+	await input.dispatchEvent('compositionend')
+	await expect(page.locator('.reference-completion')).toBeVisible()
+	await input.press('Shift+Tab')
+	await expect(page.getByRole('button', { name: 'Close reference picker' })).toBeFocused()
+	await expect(page.locator('.reference-completion')).toHaveCount(0)
 })
 test('Psalm verse 1 navigation and selection start with Scripture after the descriptive heading', async ({
 	page,
@@ -111,11 +201,14 @@ test('navigates chapter starts and individual verses to the top reading origin',
 		page.getByRole('button', { name: 'Open reference picker' }),
 	).toHaveText('John 3')
 })
-test('temporary range indication never opens verse selection', async ({
-	page,
+test('range navigation positions the first verse without highlighting or selection', async ({
+	page, isMobile,
 }) => {
 	await jump(page, 'John3:16,18-19')
-	await expect(page.locator('[data-verse="jhn.3.16"]')).toHaveClass(/indicated/)
+	await expect.poll(async () => Math.round(await verseTop(page, 'jhn.3.16'))).toBe(isMobile ? 24 : 48)
+	await expect(page.locator('.verse.indicated, .verse.selected')).toHaveCount(0)
+	await expect(page.locator('[data-verse="jhn.3.16"]')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+	await expect(page.locator('[data-verse="jhn.3.16"]')).not.toHaveClass(/indicated/)
 	await expect(page.locator('[data-verse="jhn.3.17"]')).not.toHaveClass(
 		/indicated/,
 	)
@@ -268,22 +361,64 @@ test('copies skipped verses in canonical order as prose and shares a full deep l
 	await jump(page, 'John3:16')
 	for (const id of ['jhn.3.19', 'jhn.3.16', 'jhn.3.18'])
 		await page.locator(`[data-verse="${id}"]`).click()
+	const beforeCopy = await page.evaluate(() => ({ y: scrollY, url: location.href, history: history.length }))
 	await page.getByRole('button', { name: 'Copy', exact: true }).click()
-	await expect(
-		page.getByRole('button', { name: 'Copied', exact: true }),
-	).toBeVisible()
+	await expect(page.locator('.copy-confirmation')).toHaveText('Copied')
+	await expect(page.locator('.copy-confirmation')).toBeVisible()
+	await expect(page.locator('.selected')).toHaveCount(0)
+	await expect(page.locator('.selection-tray')).toHaveCount(0)
+	await expect(page.getByRole('button', { name: 'Open reference picker' })).toHaveText('John 3')
+	expect(await page.evaluate(() => ({ y: scrollY, url: location.href, history: history.length }))).toEqual(beforeCopy)
 	const content = await page.evaluate(
 		() => (window as unknown as { lastCopy: string }).lastCopy,
 	)
 	expect(content).toMatch(/^For God so loved/)
 	expect(content).toMatch(/(?<!\n)\nJohn 3:16, 18–19 BSB$/)
+	await expect(page.locator('.copy-confirmation')).toHaveCount(0)
+	for (const id of ['jhn.3.19', 'jhn.3.16', 'jhn.3.18'])
+		await page.locator(`[data-verse="${id}"]`).click()
 	await page.getByRole('button', { name: 'Share', exact: true }).click()
+	await expect(page.locator('.copy-confirmation')).toHaveText('Copied')
+	await expect(page.locator('.selected')).toHaveCount(0)
+	await expect(page.locator('.selection-tray')).toHaveCount(0)
 	const share = await page.evaluate(
 		() => (window as unknown as { lastCopy: string }).lastCopy,
 	)
 	expect(share).toContain(content)
 	expect(share).toBe(`${content}\n${new URL('/John/3/16,18-19?version=BSB', page.url()).href}`)
 })
+for (const action of ['Copy', 'Share']) {
+	test(`failed ${action} copying keeps every selected fragment available for retry`, async ({ page }) => {
+		await page.evaluate(() => {
+			Object.defineProperty(navigator, 'share', {
+				configurable: true,
+				value: async () => { throw new DOMException('Share failed', 'NotAllowedError') },
+			})
+			Object.defineProperty(navigator, 'clipboard', {
+				configurable: true,
+				value: { writeText: async () => { throw new Error('Clipboard denied') } },
+			})
+			document.execCommand = () => false
+		})
+		await jump(page, 'Genesis1:27')
+		await page.locator('[data-verse="gen.1.27"]').first().click()
+		await page.getByRole('button', { name: action, exact: true }).click()
+		await expect(page.getByRole('status')).toHaveText('Copy unavailable. Try again.')
+		await expect(page.locator('.selected')).toHaveCount(3)
+		await expect(page.locator('.copy-confirmation')).toHaveCount(0)
+		await expect(page.getByRole('button', { name: action, exact: true })).toBeVisible()
+		await page.evaluate(() => {
+			Object.defineProperty(navigator, 'clipboard', {
+				configurable: true,
+				value: { writeText: async () => {} },
+			})
+		})
+		await page.getByRole('button', { name: action, exact: true }).click()
+		await expect(page.locator('.copy-confirmation')).toHaveText('Copied')
+		await expect(page.locator('.selected')).toHaveCount(0)
+		await expect(page.locator('.selection-tray')).toHaveCount(0)
+	})
+}
 test('preserves native text selection and ignores drag and long-press verse gestures', async ({
 	page,
 }) => {
@@ -458,7 +593,19 @@ for (const outcome of ['success', 'failed', 'cancelled'] as const) {
 		}, outcome)
 		await jump(page, 'John3:16')
 		await page.locator('[data-verse="jhn.3.16"]').click()
+		const before = await page.evaluate(() => ({ y: scrollY, url: location.href, history: history.length }))
 		await page.getByRole('button', { name: 'Share', exact: true }).click()
+		if (outcome === 'cancelled') {
+			await expect(page.locator('.selected')).toHaveCount(1)
+			await expect(page.locator('.selection-tray')).toBeVisible()
+			await expect(page.locator('.copy-confirmation')).toHaveCount(0)
+		} else {
+			await expect(page.locator('.selected')).toHaveCount(0)
+			await expect(page.locator('.selection-tray')).toHaveCount(0)
+			await expect(page.locator('.copy-confirmation')).toHaveText(outcome === 'success' ? 'Shared' : 'Copied')
+			await expect(page.getByRole('button', { name: 'Open reference picker' })).toHaveText('John 3')
+		}
+		expect(await page.evaluate(() => ({ y: scrollY, url: location.href, history: history.length }))).toEqual(before)
 		const state = await page.evaluate(() => {
 			const state = window as unknown as { lastShare: ShareData; lastCopy?: string }
 			return { shared: state.lastShare, copied: state.lastCopy }

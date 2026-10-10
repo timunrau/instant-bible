@@ -1,6 +1,6 @@
 # Instant Bible v1 behavioral contracts
 
-**Bible** is an offline-first, one-column Scripture reader. Opening Scripture and jumping to a known passage must feel immediate. There is no splash screen, navigation header, dashboard, or persistent search. The normal bottom bar contains book/chapter and Aa; a selection replaces it with count, Copy, Share, Clear.
+**Bible** is an offline-first, one-column Scripture reader. Opening Scripture and jumping to a known passage must feel immediate. There is no splash screen, navigation header, dashboard, or persistent search. The normal bottom controls are two separate floating glass pills: a book/chapter field and Aa, without an edit icon. Each has a 56px touch target and safe-area spacing. Translucency and a small CSS backdrop blur apply only to the controls, with solid theme surfaces when unsupported or reduced transparency is requested. A selection replaces them with count, Copy, Share, Clear.
 
 ## Opening and reading
 
@@ -14,11 +14,13 @@
 ## Reference interaction
 
 - The bottom reference gesture reveals an already-mounted input, synchronously focuses it, and selects its text. No network or animation can delay focus.
-- The reference sheet stays within the visible viewport above the mobile keyboard, including when the browser pans that viewport. Opening and dismissing it preserves the reading position.
+- The same compact glass reference pill becomes editable in place, with a submit arrow inside it and a separate close pill replacing Aa. Its width stays bounded and stable while typing; no new tray appears. The controls lift above the mobile keyboard with a small gap, including when the browser pans the visible viewport. Opening and dismissing them preserves the reading position.
 - Parse submitted references locally. The input and Go button are sufficient; no duplicate interpretation or hint row appears beneath them. Incomplete or invalid typing has no error. A rejected submission has a small inline error.
 - Enter and Go are equivalent. Book alone means chapter 1. Abbreviations, omitted spaces, trailing colon, lists, and ranges are supported. Single-chapter books accept verse syntax naturally. Ambiguous books and nonexistent chapters/verses are rejected.
-- Ranges/lists scroll to their first canonical verse and temporarily indicate those verses. This never opens selection mode.
-- The reference form contains only the input and Go button. BSB is the only translation; there is no translation picker or download control.
+- Successful passage submission or footnote navigation restores reference-control focus without an outer ring. Tab navigation retains a visible focus indicator.
+- An unambiguous book prefix may show its missing letters faintly inside the input, using the bundled book metadata. Tap or unmodified Tab accepts the completion and adds a space while keeping keyboard focus synchronous. Enter and Go still submit immediately. No completion appears for chapter/verse input, trailing spaces, non-prefix aliases, a selected range, a caret away from the end, or composition. No dropdown, network lookup, or delayed validation is added.
+- Navigation, including ranges/lists and incoming links, positions the first canonical verse at the reading origin without a temporary highlight. This never opens selection mode.
+- The reference form contains the input with optional inline completion and the Go button. BSB is the only translation; there is no translation picker or download control.
 
 ## Data and offline
 
@@ -43,13 +45,16 @@
 - A short stationary tap toggles an entire semantic verse. Noncontiguous selection persists during scrolling; clearing the final verse exits. Explicit navigation clears it.
 - Long presses, native word selection, and drags do not trigger verse selection. Selected fragments use a visible 2px dotted underline with no background fill.
 - Copy is plain text in canonical order. First selected verse has no number; subsequent verses have inline numbers once per semantic verse. Join all selected text into one paragraph, flatten poetry, exclude headings/notes, then a single newline and compressed reference/version.
+- Successful Copy (including Ctrl+C/Cmd+C) clears all selected verse fragments, restores the normal bottom bar without moving the reader, and shows a separate brief “Copied” status above it with a light green background and dark green text in both themes. Failed copying preserves selection for retry.
 - Desktop selection shows a small Ctrl+C hint (⌘C on Mac) beside Copy. Touch/mobile layouts hide the hint.
-- Share includes complete selected Scripture, the reference/version on the next line, and a selection deep link on its own next line. The same complete text payload is passed to Web Share or copied when sharing is unavailable or fails; a cancelled share does not copy. Confirmation stays on the control.
-- Footnotes use subtle superscripts with expanded tap targets. Small phone sheets/desktop anchored popovers preserve reading position. Explicit canonical Bible citations in source footnotes are clickable passage links, using BSB and working offline. Following one closes the footnote, clears selection, and jumps to the first cited verse with temporary range indication. Back restores the prior semantic reading position. References outside the supported canon remain source text.
+- Share includes complete selected Scripture, the reference/version on the next line, and a selection deep link on its own next line. The same complete text payload is passed to Web Share or copied when sharing is unavailable or fails. Successful sharing or fallback copying clears selection and restores the normal bottom bar without moving the reader, showing a separate brief green “Shared” or “Copied” status. Cancellation or failed fallback copying preserves selection; a cancelled share does not copy.
+- Footnotes use subtle superscripts with expanded tap targets. Small phone sheets/desktop anchored popovers preserve reading position. Explicit canonical Bible citations in source footnotes are clickable passage links, using BSB and working offline. Following one closes the footnote, clears selection, and jumps to the first cited verse without highlighting it. Back restores the prior semantic reading position. References outside the supported canon remain source text.
 
 ## Settings and exclusions
 
-Serif/Sans, discrete text sizes, Compact/Normal/Relaxed spacing, Auto/Light/Dark theme, attribution, and build information. Translation controls and the extra fetch(bible) source-credit line do not appear in Reading settings. Light is exact white/black; AMOLED is exact black/white on all surfaces. Settings persist locally. No About screen or install banner.
+Reading settings open in a compact floating modal 10px above the reference/Aa pills, with a short entrance from the Aa side. Both bottom pills remain visible. Aa shows a selected state and toggles the modal closed on another tap; it remains part of modal keyboard navigation. The modal scrolls within the available height on short screens and respects reduced motion.
+
+Serif/Sans, discrete text sizes, Compact/Normal/Relaxed spacing, Auto/Light/Dark theme, attribution, and build information. Translation controls and the extra fetch(bible) source-credit line do not appear in Reading settings. Light is exact white/black; AMOLED is exact black/white on Scripture and solid reader surfaces. The floating glass controls and transient green Copy/Share confirmation are exceptions. Settings persist locally. No About screen or install banner.
 
 Browser/PWA chrome requests black in both reader themes. The maskable app icon keeps its artwork well inside the central safe circle with generous padding and an opaque background.
 
