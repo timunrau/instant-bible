@@ -1,3 +1,13 @@
+## [1.0.0](https://github.com/timunrau/instant-bible/compare/v0.3.0...v1.0.0) (2026-10-10)
+
+### ⚠ BREAKING CHANGES
+
+* BSB is the only supported translation. Links and saved positions requesting other translations open the same canonical passage in BSB.
+
+### Features
+
+* use BSB only and simplify verse sharing ([1bab57e](https://github.com/timunrau/instant-bible/commit/1bab57ee985c50daa6a2c054b00828cb6210c22b))
+
 ## [0.3.0](https://github.com/timunrau/instant-bible/compare/v0.2.0...v0.3.0) (2026-10-04)
 
 ### Features
