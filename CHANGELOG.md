@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/timunrau/instant-bible/compare/v1.1.0...v1.2.0) (2026-10-10)
+
+### Features
+
+* match verse selection controls to glass pills ([1ea2195](https://github.com/timunrau/instant-bible/commit/1ea219514397771c14b1f92faaa633e95dca9d49))
+
 ## [1.1.0](https://github.com/timunrau/instant-bible/compare/v1.0.0...v1.1.0) (2026-10-10)
 
 ### Features
