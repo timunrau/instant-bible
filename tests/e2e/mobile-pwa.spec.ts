@@ -101,7 +101,7 @@ test('PWA chrome stays black while the reader color scheme follows settings and 
 	}
 })
 
-test('reduced transparency makes both floating controls solid in the active theme', async ({ page, context }) => {
+test('reduced transparency makes reader and selection pills solid in the active theme', async ({ page, context }) => {
 	await page.goto('/')
 	await settled(page)
 	const session = await context.newCDPSession(page)
@@ -116,6 +116,13 @@ test('reduced transparency makes both floating controls solid in the active them
 			await expect(page.locator(control)).toHaveCSS('background-image', 'none')
 			await expect(page.locator(control)).toHaveCSS('backdrop-filter', 'none')
 		}
+		await page.locator('[data-verse="gen.1.1"]').first().click()
+		for (const control of ['.selection-count', '.selection-copy', '.selection-tray button[aria-label="Share"]', '.selection-clear']) {
+			await expect(page.locator(control)).toHaveCSS('background-color', mode === 'dark' ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)')
+			await expect(page.locator(control)).toHaveCSS('background-image', 'none')
+			await expect(page.locator(control)).toHaveCSS('backdrop-filter', 'none')
+		}
+		await page.getByRole('button', { name: 'Clear', exact: true }).click()
 	}
 })
 

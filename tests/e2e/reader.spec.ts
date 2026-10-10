@@ -315,9 +315,22 @@ test('selects and toggles arbitrary semantic verses and replaces the normal tray
 	isMobile,
 }) => {
 	await jump(page, 'John3:16')
+	const referenceTypography = await page.getByRole('button', { name: 'Open reference picker' }).evaluate((element) => {
+		const style = getComputedStyle(element)
+		return { family: style.fontFamily, size: style.fontSize, weight: style.fontWeight }
+	})
 	for (const id of ['jhn.3.19', 'jhn.3.16', 'jhn.3.18'])
 		await page.locator(`[data-verse="${id}"]`).first().click()
 	await expect(page.getByRole('status')).toHaveText('3 selected')
+	expect(await page.getByRole('status').evaluate((element) => {
+		const style = getComputedStyle(element)
+		return { family: style.fontFamily, size: style.fontSize, weight: style.fontWeight }
+	})).toEqual(referenceTypography)
+	for (const action of ['Copy', 'Share', 'Clear']) {
+		const bounds = (await page.getByRole('button', { name: action, exact: true }).boundingBox())!
+		expect(bounds.width).toBeGreaterThanOrEqual(56)
+		expect(bounds.height).toBe(bounds.width)
+	}
 	const hint = page.locator('.copy-shortcut')
 	if (isMobile) await expect(hint).toBeHidden()
 	else {

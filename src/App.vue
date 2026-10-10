@@ -413,17 +413,23 @@ onUnmounted(() => {
 	</footer>
 	<footer
 		v-if="selected.size"
-		class="bottom-bar selection-tray"
+		class="bottom-bar reader-bar selection-tray"
 		:inert="dialog || undefined"
 		aria-label="Verse selection"
 	>
-		<span class="selection-count" role="status">{{
+		<span class="reference-control selection-count glass-control" :class="{ 'selection-error': copyError }" role="status">{{
 			copyError || `${selected.size} selected`
 		}}</span>
-		<button aria-keyshortcuts="Control+C Meta+C" @click="copy()">Copy</button>
-		<kbd class="copy-shortcut">{{ copyShortcut }}</kbd>
-		<button @click="copy(true)">Share</button
-		><button @click="selected = new Set()">Clear</button>
+		<button class="selection-copy glass-control" aria-label="Copy" title="Copy" aria-keyshortcuts="Control+C Meta+C" @click="copy()">
+			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" /></svg>
+			<kbd class="copy-shortcut" aria-hidden="true">{{ copyShortcut }}</kbd>
+		</button>
+		<button class="glass-control" aria-label="Share" title="Share" @click="copy(true)">
+			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3m-4 4 4-4 4 4M7 10H5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2" /></svg>
+		</button>
+		<button class="selection-clear glass-control" aria-label="Clear" title="Clear selection" @click="selected = new Set()">
+			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg>
+		</button>
 	</footer>
 	<div v-if="confirmation" class="copy-confirmation" role="status">{{ confirmation }}</div>
 	<div v-if="dialog" class="backdrop" :class="{ 'reference-backdrop': referenceOpen }" aria-hidden="true" @click="close"></div>

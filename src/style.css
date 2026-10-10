@@ -331,13 +331,26 @@ a {
 	pointer-events: none;
 }
 .selection-count {
-	flex: 1;
-	padding-left: 12px;
+	white-space: nowrap;
+}
+.selection-error {
+	white-space: normal;
 	font-size: 0.8rem;
+	font-weight: 400;
 }
 .selection-tray button {
-	padding: 9px 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 56px;
+	height: 56px;
+	padding: 0;
+	border-radius: 30px;
 	color: var(--foreground);
+}
+.selection-copy {
+	position: relative;
 }
 .copy-shortcut {
 	display: none;
@@ -348,7 +361,11 @@ a {
 @media (min-width: 768px) and (hover: hover) and (pointer: fine) {
 	.copy-shortcut {
 		display: inline;
-		margin: 0 8px 0 -5px;
+		position: absolute;
+		left: 50%;
+		top: calc(100% + 4px);
+		transform: translateX(-50%);
+		color: var(--muted);
 	}
 }
 .backdrop {
@@ -552,19 +569,6 @@ a {
 		--control-gap: 18px;
 		width: calc(100% - 64px);
 		bottom: calc(18px + env(safe-area-inset-bottom));
-	}
-	.selection-tray {
-		max-width: 700px;
-		left: 50%;
-		right: auto;
-		transform: translateX(-50%);
-		width: calc(100% - 64px);
-		border: 1px solid var(--line);
-		border-radius: 9px;
-		bottom: 18px;
-		padding: 3px 10px;
-		background: var(--background);
-		min-height: 54px;
 	}
 	.panel {
 		left: 50%;
