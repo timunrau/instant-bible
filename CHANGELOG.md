@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/timunrau/instant-bible/compare/v1.0.0...v1.1.0) (2026-10-10)
+
+### Features
+
+* refine passage controls and sharing feedback ([bceac76](https://github.com/timunrau/instant-bible/commit/bceac76fabaa89a19df700e436eb682c9d26e894))
+
 ## [1.0.0](https://github.com/timunrau/instant-bible/compare/v0.3.0...v1.0.0) (2026-10-10)
 
 ### ⚠ BREAKING CHANGES
