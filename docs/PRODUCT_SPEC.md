@@ -14,7 +14,7 @@
 ## Reference interaction
 
 - The bottom reference gesture reveals an already-mounted input, synchronously focuses it, and selects its text. No network or animation can delay focus.
-- The same compact glass reference pill becomes editable in place, with a submit arrow inside it and a separate close pill replacing Aa. Its width stays bounded and stable while typing; no new tray appears. The controls lift above the mobile keyboard with a small gap, including when the browser pans the visible viewport. Opening and dismissing them preserves the reading position.
+- The same compact glass reference pill becomes editable in place, with a separate submit arrow pill replacing Aa, accessible as Go. The input contains no submit arrow, and there is no close pill; tapping outside or pressing Escape dismisses editing. Its width stays bounded and stable while typing; no new tray appears. The controls lift above the mobile keyboard with a small gap, including when the browser pans the visible viewport. Opening and dismissing them preserves the reading position.
 - Parse submitted references locally. The input and Go button are sufficient; no duplicate interpretation or hint row appears beneath them. Incomplete or invalid typing has no error. A rejected submission has a small inline error.
 - Enter and Go are equivalent. Book alone means chapter 1. Abbreviations, omitted spaces, trailing colon, lists, and ranges are supported. Single-chapter books accept verse syntax naturally. Ambiguous books and nonexistent chapters/verses are rejected.
 - Successful passage submission or footnote navigation restores reference-control focus without an outer ring. Tab navigation retains a visible focus indicator.

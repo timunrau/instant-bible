@@ -26,7 +26,7 @@ test('reference controls follow the keyboard viewport, including browser panning
 			return { top: offsetTop, bottom: height + offsetTop }
 		}, offsetTop)
 		await expect.poll(async () => Math.round((await panel.boundingBox())!.y + (await panel.boundingBox())!.height)).toBe(Math.round(visible.bottom - 14))
-		for (const control of [input, page.getByRole('button', { name: 'Go', exact: true }), page.getByRole('button', { name: 'Close reference picker' })]) {
+		for (const control of [input, page.getByRole('button', { name: 'Go', exact: true })]) {
 			const rect = (await control.boundingBox())!
 			expect(rect.y).toBeGreaterThanOrEqual(visible.top)
 			expect(rect.y + rect.height).toBeLessThanOrEqual(visible.bottom)
@@ -34,7 +34,8 @@ test('reference controls follow the keyboard viewport, including browser panning
 		await expect(input).toBeFocused()
 		await expect(input).toHaveValue('rom 8:28')
 	}
-	await page.getByRole('button', { name: 'Close reference picker' }).click()
+	await page.locator('.reference-backdrop').click({ position: { x: 10, y: 10 } })
+	await expect(panel).toBeHidden()
 	await page.evaluate(() => {
 		const viewport = window.visualViewport!
 		Object.defineProperties(viewport, {
@@ -47,7 +48,7 @@ test('reference controls follow the keyboard viewport, including browser panning
 	await page.getByRole('button', { name: 'Open reference picker' }).click()
 	await expect.poll(async () => (await panel.boundingBox())!.y).toBe(original!.y)
 	await input.fill('rom 8:28')
-	await input.press('Enter')
+	await page.getByRole('button', { name: 'Go', exact: true }).click()
 	await expect(page).toHaveURL(/\/Romans\/8\/28\?version=BSB$/)
 })
 

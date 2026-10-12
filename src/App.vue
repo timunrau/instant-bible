@@ -353,7 +353,7 @@ onUnmounted(() => {
 		>
 			<span>{{ chapterLabel(current.book, current.chapter) }}</span>
 		</button>
-		<form ref="referenceForm" class="reference-editor glass-control" :hidden="!referenceOpen" @submit.prevent="submit">
+		<form id="reference-form" ref="referenceForm" class="reference-editor glass-control" :hidden="!referenceOpen" @submit.prevent="submit">
 			<div class="reference-field">
 				<input
 					ref="input"
@@ -390,11 +390,10 @@ onUnmounted(() => {
 					</button>
 				</div>
 			</div>
-			<button type="submit" class="go" aria-label="Go">
-				<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
-			</button>
 		</form>
-		<button v-if="referenceOpen" class="reference-close glass-control" aria-label="Close reference picker" @click="close">✕</button>
+		<button v-if="referenceOpen" type="submit" form="reference-form" class="go glass-control" aria-label="Go">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+		</button>
 		<span v-if="status && !referenceOpen" class="reader-status" role="status">{{ status }}</span>
 		<button
 			v-if="!selected.size"

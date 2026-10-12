@@ -64,14 +64,21 @@ test('the inline reference editor has no duplicate interpretation or hint row', 
 	for (const draft of ['Genesis 1', 'rom 8:28', '']) {
 		await input.fill(draft)
 		await expect(panel.locator('.interpretation, .input-hint')).toHaveCount(0)
-		await expect(panel.getByRole('button')).toHaveCount(2)
+		await expect(panel.getByRole('button')).toHaveCount(1)
+		await expect(panel.getByRole('button', { name: 'Go', exact: true })).toBeVisible()
+		await expect(panel.locator('form button, form svg')).toHaveCount(0)
 	}
 })
 test('the reference pill edits in place with stable bounds for short and long references', async ({ page }) => {
 	const button = page.getByRole('button', { name: 'Open reference picker' })
 	const initial = (await button.boundingBox())!
+	const actionBounds = await page.getByRole('button', { name: 'Reader settings', exact: true }).boundingBox()
 	expect(initial.width).toBeLessThanOrEqual(260)
 	await button.click()
+	const go = page.getByRole('button', { name: 'Go', exact: true })
+	expect(await go.boundingBox()).toEqual(actionBounds)
+	await expect(go.locator('svg')).toHaveCount(1)
+	await expect(page.getByRole('button', { name: 'Close reference picker' })).toHaveCount(0)
 	const editor = page.locator('.reference-editor')
 	const input = page.getByRole('textbox', { name: 'Bible reference' })
 	for (const draft of ['John 3', '2 Thessalonians 3:16-18', 'John 21:25; Acts 1:1-2']) {
@@ -154,7 +161,7 @@ test('completion works offline and stays out of selection, composition and chapt
 	await input.dispatchEvent('compositionend')
 	await expect(page.locator('.reference-completion')).toBeVisible()
 	await input.press('Shift+Tab')
-	await expect(page.getByRole('button', { name: 'Close reference picker' })).toBeFocused()
+	await expect(page.getByRole('button', { name: 'Go', exact: true })).toBeFocused()
 	await expect(page.locator('.reference-completion')).toHaveCount(0)
 })
 test('Psalm verse 1 navigation and selection start with Scripture after the descriptive heading', async ({

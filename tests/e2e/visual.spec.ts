@@ -29,7 +29,7 @@ test('canonical dialog visual states', async ({ page }) => {
 	await page.getByRole('button', { name: 'Clear', exact: true }).click()
 	await page.getByRole('button', { name: 'Open reference picker' }).click()
 	await expect(page).toHaveScreenshot('reference-picker-amoled.png')
-	await page.getByRole('button', { name: 'Close reference picker' }).click()
+	await page.keyboard.press('Escape')
 	await page
 		.getByRole('button', { name: 'Reader settings', exact: true })
 		.click()

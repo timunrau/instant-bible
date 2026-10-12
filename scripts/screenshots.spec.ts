@@ -25,7 +25,7 @@ test('capture README screenshots', async ({ page }, testInfo) => {
 	await input.fill('joh')
 	await expect(page.getByRole('button', { name: 'Complete John', exact: true })).toHaveText('n')
 	await capture('reference')
-	await page.getByRole('button', { name: 'Close reference picker' }).click()
+	await page.keyboard.press('Escape')
 
 	await jump(page, 'John 3:16')
 	await page.getByRole('button', { name: 'Reader settings', exact: true }).click()
