@@ -1,3 +1,9 @@
+## [1.2.1](https://github.com/timunrau/instant-bible/compare/v1.2.0...v1.2.1) (2026-10-12)
+
+### Bug Fixes
+
+* replace reference close button with submit arrow ([ea4daf9](https://github.com/timunrau/instant-bible/commit/ea4daf957becc2645ba1f5d2b70d072e589974a1))
+
 ## [1.2.0](https://github.com/timunrau/instant-bible/compare/v1.1.0...v1.2.0) (2026-10-10)
 
 ### Features
