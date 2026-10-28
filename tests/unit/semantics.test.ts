@@ -80,7 +80,7 @@ describe('plain-text Scripture copying', () => {
 		expect(text).toMatch(/^For God so loved/)
 		expect(text).toContain('18 Whoever believes')
 		expect(text).toContain('19 And this is the verdict')
-		expect(text).toMatch(/(?<!\n)\nJohn 3:16, 18–19 BSB$/)
+		expect(text).toMatch(/^[^\n]+ John 3:16, 18–19 BSB$/)
 		expect(text).not.toContain('16 For')
 		expect(text).not.toContain('God’s Love for the World')
 	})
@@ -95,7 +95,7 @@ describe('plain-text Scripture copying', () => {
 	it.each(['Genesis1:31', 'Genesis1:26-31'])('flattens source paragraph breaks when copying %s', (reference) => {
 		const text = copyText(parseReference(reference)!.verses, [book('gen').chapters[0]!])
 		const lines = text.split('\n')
-		expect(lines).toHaveLength(2)
+		expect(lines).toHaveLength(1)
 		expect(lines[0]).toContain('And God looked upon all that He had made')
 		expect(lines[0]).toContain('And there was evening, and there was morning — the sixth day.')
 	})
@@ -104,7 +104,7 @@ describe('plain-text Scripture copying', () => {
 		const text = copyText(parseReference('Psalm23:1-6')!.verses, [c])
 		expect(text).toMatch(/^The LORD is my shepherd/)
 		expect(text).toContain('2 He makes me lie down')
-		expect(text.split('\n')).toHaveLength(2)
+		expect(text.split('\n')).toHaveLength(1)
 		expect(text).not.toContain('A Psalm of David')
 	})
 	it('numbers a split semantic verse only once', () => {

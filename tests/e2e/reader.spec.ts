@@ -393,7 +393,7 @@ test('copies skipped verses in canonical order as prose and shares a full deep l
 		() => (window as unknown as { lastCopy: string }).lastCopy,
 	)
 	expect(content).toMatch(/^For God so loved/)
-	expect(content).toMatch(/(?<!\n)\nJohn 3:16, 18–19 BSB$/)
+	expect(content).toMatch(/^[^\n]+ John 3:16, 18–19 BSB$/)
 	await expect(page.locator('.copy-confirmation')).toHaveCount(0)
 	for (const id of ['jhn.3.19', 'jhn.3.16', 'jhn.3.18'])
 		await page.locator(`[data-verse="${id}"]`).click()
@@ -602,7 +602,7 @@ test('a long press does not toggle verse selection', async ({ page }) => {
 })
 
 for (const outcome of ['success', 'failed', 'cancelled'] as const) {
-	test(`native sharing ${outcome} puts the reference and link on separate lines`, async ({ page }) => {
+	test(`native sharing ${outcome} puts the reference after the verse and the link on its own line`, async ({ page }) => {
 		await page.evaluate((outcome) => {
 			const state = window as unknown as { lastShare: ShareData; lastCopy?: string }
 			Object.defineProperty(navigator, 'share', { configurable: true, value: async (data: ShareData) => {
@@ -630,7 +630,7 @@ for (const outcome of ['success', 'failed', 'cancelled'] as const) {
 			const state = window as unknown as { lastShare: ShareData; lastCopy?: string }
 			return { shared: state.lastShare, copied: state.lastCopy }
 		})
-		expect(state.shared.text).toMatch(/[^\n]\nJohn 3:16 BSB\nhttps?:\/\/[^\n]+\/John\/3\/16\?version=BSB$/)
+		expect(state.shared.text).toMatch(/^[^\n]+ John 3:16 BSB\nhttps?:\/\/[^\n]+\/John\/3\/16\?version=BSB$/)
 		expect(state.shared.url).toBeUndefined()
 		if (outcome === 'failed') expect(state.copied).toBe(state.shared.text)
 		else expect(state.copied).toBeUndefined()

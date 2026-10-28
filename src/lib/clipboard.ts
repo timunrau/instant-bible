@@ -29,7 +29,7 @@ export function copyText(
 
 	return (
 		parts.join(' ').replace(/\s+/g, ' ') +
-		'\n' +
+		' ' +
 		formatReferences(selection) +
 		' BSB'
 	)
