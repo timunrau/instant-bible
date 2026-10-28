@@ -1,3 +1,9 @@
+## [1.2.2](https://github.com/timunrau/instant-bible/compare/v1.2.1...v1.2.2) (2026-10-28)
+
+### Bug Fixes
+
+* append reference and version inline when copying or sharing ([f305444](https://github.com/timunrau/instant-bible/commit/f30544409d9d70ce24cb53ef823d890360e03370))
+
 ## [1.2.1](https://github.com/timunrau/instant-bible/compare/v1.2.0...v1.2.1) (2026-10-12)
 
 ### Bug Fixes
