@@ -53,5 +53,5 @@ test('does not forcibly reload a reader when a service worker update is checked'
 	await expect(
 		page.getByRole('button', { name: 'Open reference picker' }),
 	).toHaveText('Romans 8')
-	await expect(page).toHaveURL(/\/Romans\/8\/28\?version=BSB/)
+	await expect(page).toHaveURL(/\/Romans\/8\/28/)
 })

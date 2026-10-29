@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { settled, verseTop } from './helpers'
 
 test('format preferences persist without moving the reader and retain disabled superscripts', async ({ page }) => {
-	await page.goto('/John/3/16?version=BSB')
+	await page.goto('/John/3/16')
 	await settled(page)
 	const top = await verseTop(page, 'jhn.3.16')
 	await page.getByRole('button', { name: 'Reader settings', exact: true }).click()
@@ -41,7 +41,7 @@ for (const action of ['Copy', 'keyboard', 'native share', 'unavailable share', '
 					state.exported = data.text
 				} })
 			}, { action, includeVerseNumbers })
-			await page.goto('/John/3/16?version=BSB')
+			await page.goto('/John/3/16')
 			await settled(page)
 			for (const verse of [18, 16]) await page.locator(`[data-verse="jhn.3.${verse}"]`).first().click()
 			if (action === 'keyboard') await page.keyboard.press('Control+c')
@@ -53,12 +53,12 @@ for (const action of ['Copy', 'keyboard', 'native share', 'unavailable share', '
 				return { exported, shared }
 			})
 			expect(state.exported).toMatch(/^For God so loved/)
-			expect(state.exported).toContain(' **John 3:16, 18 BSB**')
+			expect(state.exported).toContain(' **John 3:16, 18**')
 			expect(state.exported.includes('¹⁸ Whoever believes')).toBe(includeVerseNumbers)
 			expect(state.exported).not.toContain('18 Whoever believes')
 			if (action.includes('share')) {
 				expect(state.exported.split('\n')).toHaveLength(2)
-				expect(state.exported.split('\n')[1]).toBe(new URL('/John/3/16,18?version=BSB', page.url()).href)
+				expect(state.exported.split('\n')[1]).toBe(new URL('/John/3/16,18', page.url()).href)
 				if (action === 'failed share') expect(state.exported).toBe(state.shared)
 			} else expect(state.exported).not.toContain('\n')
 		})

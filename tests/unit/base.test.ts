@@ -15,6 +15,7 @@ it.each([
 	const passage = parseReference(reference)!
 	const path = passageUrl(passage)
 	expect(path).toMatch(/^\/instant-bible\//)
+	expect(new URL(path, 'https://bible.test').searchParams.has('version')).toBe(false)
 	expect(parseUrl(new URL(path, 'https://bible.test'))).toEqual({ passage, version: 'BSB' })
 	expect(parseUrl(new URL(path.replace('/instant-bible/', '/'), 'https://bible.test'))).toBeUndefined()
 	expect(parseUrl(new URL(path.replace('/instant-bible/', '/instant-bible-other/'), 'https://bible.test'))).toBeUndefined()

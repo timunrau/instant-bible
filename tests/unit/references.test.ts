@@ -159,7 +159,7 @@ describe('canonical IDs and formatting', () => {
 		])
 	})
 })
-describe('explicit translation deep links', () => {
+describe('canonical passage deep links', () => {
 	it.each([
 		'John 3',
 		'John 3:16',
@@ -168,10 +168,10 @@ describe('explicit translation deep links', () => {
 		'John21:25;Acts1:1,2',
 		'1Cor13:4',
 		'Jude5',
-	])('round-trips %s with explicit BSB', (input) => {
+	])('round-trips %s without a version query', (input) => {
 		const p = parseReference(input)!,
 			url = passageUrl(p)
-		expect(url).toContain('version=BSB')
+		expect(new URL(url, 'https://bible.test').searchParams.has('version')).toBe(false)
 		expect(parseUrl(new URL(url, 'https://bible.test'))).toEqual({
 			passage: p,
 			version: 'BSB',
@@ -179,7 +179,7 @@ describe('explicit translation deep links', () => {
 	})
 	it('uses canonical human-readable URL paths', () =>
 		expect(passageUrl(parseReference('1cor13:4-7')!)).toBe(
-			'/1-Corinthians/13/4-7?version=BSB',
+			'/1-Corinthians/13/4-7',
 		))
 	it('never loses multi-book noncontiguous selections', () =>
 		expect(passageUrl(parseReference('John21:25;Acts1:1,2')!)).toContain(
@@ -196,6 +196,14 @@ describe('explicit translation deep links', () => {
 	)
 })
 
-it.each(['WEB', 'KJV', 'unknown'])('opens an old %s URL at the same passage in BSB', (version) => {
+it.each(['BSB', 'WEB', 'KJV', 'unknown'])('opens an old %s URL at the same passage in BSB', (version) => {
 	expect(parseUrl(new URL(`/John/3/16-18?version=${version}`, 'https://bible.test'))).toEqual({ passage: parseReference('John3:16-18'), version: 'BSB' })
+})
+
+ it.each(['BSB', 'WEB', 'unknown'])('normalizes legacy %s selection links without losing verses', (version) => {
+	const passage = parseReference('John21:25;Acts1:1-2')!
+	const path = '/John/21/25?selection=jhn.21.25%2Cact.1.1%2Cact.1.2'
+	const route = parseUrl(new URL(`${path}&version=${version}`, 'https://bible.test'))!
+	expect(route.passage).toEqual(passage)
+	expect(passageUrl(route.passage)).toBe(path)
 })

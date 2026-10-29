@@ -18,7 +18,7 @@ Read [the product contracts](docs/PRODUCT_SPEC.md), the relevant unit fixture, a
 - Maintain a stable bounded chapter window. Preserve a visual anchor when adding/removing chapters and a semantic anchor across restarts, typography changes, and resize.
 - Focus the already-mounted reference input synchronously in the tap handler; never defer mobile keyboard focus to an animation, await, or nextTick.
 - Typed reference submission, swipe, deep links, Back, selection and copy contracts live in the specification/tests.
-- All generated URLs explicitly include a version. Vertical reading uses replaceState; explicit jumps use pushState and preserve the prior semantic anchor.
+- Generated passage URLs omit the translation version; legacy versioned links remain compatible. Copy/share references also omit the translation suffix. Vertical reading uses replaceState; explicit jumps use pushState and preserve the prior semantic anchor.
 - True AMOLED means exact #000000 surfaces and #FFFFFF Scripture. Apply theme before mount. Fonts are self-hosted.
 - Never automatically reload an active reader for a service worker update. Only an explicit tap on the version control may activate an installed update and reload, preserving the semantic reading anchor and precached BSB.
 - Optimize touch/mobile first while keeping desktop excellent. Maintain keyboard access, native word selection, and reduced-motion support.

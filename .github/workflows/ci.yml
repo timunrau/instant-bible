@@ -47,7 +47,7 @@ jobs:
           docker cp bible-check:/usr/share/nginx/html/. dist
           for i in $(seq 1 30); do curl -fsS http://localhost:8080/healthz && break || sleep 1; done
           test "$(curl -fsS http://localhost:8080/healthz)" = ok
-          curl -fsS 'http://localhost:8080/John/3/16?version=BSB' | cmp - dist/index.html
+          curl -fsS 'http://localhost:8080/John/3/16' | cmp - dist/index.html
           check_header() {
             curl -fsSI "http://localhost:8080/$1" | tr -d '\r' | grep -Fxi "$2"
           }

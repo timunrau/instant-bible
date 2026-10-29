@@ -27,7 +27,7 @@ describe('source footnote citations', () => {
 		expect(parts.map((part) => part.text).join('')).toBe(text)
 		expect(parts.flatMap((part) => part.passage ? [passageLabel(part.passage)] : [])).toEqual(labels)
 	})
-	it('preserves note emphasis and emits navigation with a versioned native link', async () => {
+	it('preserves note emphasis and emits navigation with a canonical native link', async () => {
 		const wrapper = mount(InlineNodes, {
 			props: {
 				nodes: [{ kind: 'em', children: [{ kind: 'text', text: 'See Mark 10:7–8.' }] }],
@@ -37,7 +37,7 @@ describe('source footnote citations', () => {
 		})
 		const link = wrapper.get('em a')
 		expect(link.text()).toBe('Mark 10:7–8')
-		expect(link.attributes('href')).toBe('/Mark/10/7-8?version=BSB')
+		expect(link.attributes('href')).toBe('/Mark/10/7-8')
 		await link.trigger('click', { button: 0 })
 		expect(wrapper.emitted('navigate')?.[0]?.[0]).toMatchObject({ book: 'mrk', chapter: 10, verse: 7 })
 		const modified = new MouseEvent('click', { button: 0, ctrlKey: true, cancelable: true })

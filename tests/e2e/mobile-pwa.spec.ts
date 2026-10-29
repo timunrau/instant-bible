@@ -3,7 +3,7 @@ import { settled, theme } from './helpers'
 
 test('reference controls follow the keyboard viewport, including browser panning and dismissal', async ({ page, isMobile }) => {
 	test.skip(!isMobile, 'Exercises the phone keyboard viewport.')
-	await page.goto('/John/3/16?version=BSB')
+	await page.goto('/John/3/16')
 	await settled(page)
 	const position = await page.evaluate(() => ({ y: scrollY, anchor: localStorage.getItem('bible-position') }))
 	await page.getByRole('button', { name: 'Open reference picker' }).click()
@@ -49,7 +49,7 @@ test('reference controls follow the keyboard viewport, including browser panning
 	await expect.poll(async () => (await panel.boundingBox())!.y).toBe(original!.y)
 	await input.fill('rom 8:28')
 	await page.getByRole('button', { name: 'Go', exact: true }).click()
-	await expect(page).toHaveURL(/\/Romans\/8\/28\?version=BSB$/)
+	await expect(page).toHaveURL(/\/Romans\/8\/28$/)
 })
 
 test('reference focus and navigation work without VisualViewport support', async ({ page }) => {
@@ -61,7 +61,7 @@ test('reference focus and navigation work without VisualViewport support', async
 	await expect(input).toBeFocused()
 	await input.fill('John 3:16')
 	await input.press('Enter')
-	await expect(page).toHaveURL(/\/John\/3\/16\?version=BSB$/)
+	await expect(page).toHaveURL(/\/John\/3\/16$/)
 })
 
 for (const mode of ['dark', 'light'] as const) {

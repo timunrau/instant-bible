@@ -80,7 +80,7 @@ describe('plain-text Scripture copying', () => {
 		expect(text).toMatch(/^For God so loved/)
 		expect(text).toContain('18 Whoever believes')
 		expect(text).toContain('19 And this is the verdict')
-		expect(text).toMatch(/^[^\n]+ John 3:16, 18–19 BSB$/)
+		expect(text).toMatch(/^[^\n]+ John 3:16, 18–19$/)
 		expect(text).not.toContain('16 For')
 		expect(text).not.toContain('God’s Love for the World')
 	})
@@ -128,7 +128,7 @@ describe('Copy and Share formatting', () => {
 		expect(text.includes(`${prefix} Whoever believes`)).toBe(format.includeVerseNumbers)
 		expect(text).not.toContain('16 For God')
 		expect(text).not.toContain('¹⁶ For God')
-		expect(text.endsWith(format.boldReference ? '**John 3:16, 18–19 BSB**' : 'John 3:16, 18–19 BSB')).toBe(true)
+		expect(text.endsWith(format.boldReference ? '**John 3:16, 18–19**' : 'John 3:16, 18–19')).toBe(true)
 		expect(text.includes('**')).toBe(format.boldReference)
 		if (!format.includeVerseNumbers) expect(text.slice(0, text.indexOf('John 3:'))).not.toMatch(/[0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/)
 		expect(text).not.toMatch(/\n|God’s Love for the World/)
@@ -141,7 +141,7 @@ describe('Copy and Share formatting', () => {
 		const chapters = [...new Map(refs.map((r) => [`${r.book}.${r.chapter}`, book(r.book).chapters[r.chapter - 1]!])).values()]
 		const unnumbered = copyText(refs, chapters, { includeVerseNumbers: false, boldReference: false, superscriptNumbers: false })
 		const text = copyText(refs, chapters, { includeVerseNumbers: true, boldReference: true, superscriptNumbers: true })
-		const label = `${formatReferences(refs)} BSB`
+		const label = formatReferences(refs)
 		const prose = text.slice(0, -` **${label}**`.length)
 		expect(prose.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+ /g, '')).toBe(unnumbered.slice(0, -` ${label}`.length))
 		expect(prose.match(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+ /g) ?? []).toHaveLength(refs.length - 1)

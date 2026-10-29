@@ -12,7 +12,7 @@ export const slug = (book: string) => bookById(book)!.name.replace(/\s+/g, '-')
 export function passageUrl(p: Passage): string {
 	const refs = ordered(p.verses)
 	const first = refs[0] ?? p
-	const params = new URLSearchParams({ version: 'BSB' })
+	const params = new URLSearchParams()
 	let suffix = p.verse ? `/${p.verse}` : ''
 	if (
 		refs.length &&
@@ -27,7 +27,7 @@ export function passageUrl(p: Passage): string {
 		suffix = `/${first.verse ?? 1}`
 		params.set('selection', refs.map(verseId).join(','))
 	}
-	return appUrl(`${slug(first.book)}/${first.chapter}${suffix}?${params}`)
+	return appUrl(`${slug(first.book)}/${first.chapter}${suffix}${params.size ? `?${params}` : ''}`)
 }
 export function parseUrl(
 	url: URL,

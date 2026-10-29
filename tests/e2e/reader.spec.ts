@@ -11,7 +11,7 @@ test('opens to Genesis 1 on the first launch', async ({ page }) => {
 	await expect(page.locator('[data-verse="gen.1.1"]')).toContainText(
 		'In the beginning God created',
 	)
-	await expect(page).toHaveURL(/\/Genesis\/1\?version=BSB$/)
+	await expect(page).toHaveURL(/\/Genesis\/1$/)
 	await expect(page).toHaveTitle('Genesis 1 — Bible')
 	expect(await page.locator('h1').count()).toBe(1)
 })
@@ -129,11 +129,11 @@ test('tapping inline completion keeps focus synchronous and leaves Enter and Go 
 	expect(result).toEqual({ value: '1 Corinthians ', focused: true, start: 14, end: 14 })
 	await input.fill('joh')
 	await input.press('Enter')
-	await expect(page).toHaveURL(/\/John\/1\?version=BSB$/)
+	await expect(page).toHaveURL(/\/John\/1$/)
 	await page.getByRole('button', { name: 'Open reference picker' }).click()
 	await input.fill('1Cor')
 	await page.getByRole('button', { name: 'Go', exact: true }).click()
-	await expect(page).toHaveURL(/\/1-Corinthians\/1\?version=BSB$/)
+	await expect(page).toHaveURL(/\/1-Corinthians\/1$/)
 })
 test('completion works offline and stays out of selection, composition and chapter input', async ({ page, context }) => {
 	await page.getByRole('button', { name: 'Open reference picker' }).click()
@@ -222,7 +222,7 @@ test('range navigation positions the first verse without highlighting or selecti
 	await expect(
 		page.getByRole('button', { name: 'Copy', exact: true }),
 	).toHaveCount(0)
-	await expect(page).toHaveURL(/\/John\/3\/16,18-19\?version=BSB/)
+	await expect(page).toHaveURL(/\/John\/3\/16,18-19/)
 })
 test('navigating an installed Bible and opening its reference picker performs no external network request', async ({
 	page,
@@ -393,7 +393,7 @@ test('copies skipped verses in canonical order as prose and shares a full deep l
 		() => (window as unknown as { lastCopy: string }).lastCopy,
 	)
 	expect(content).toMatch(/^For God so loved/)
-	expect(content).toMatch(/^[^\n]+ John 3:16, 18–19 BSB$/)
+	expect(content).toMatch(/^[^\n]+ John 3:16, 18–19$/)
 	await expect(page.locator('.copy-confirmation')).toHaveCount(0)
 	for (const id of ['jhn.3.19', 'jhn.3.16', 'jhn.3.18'])
 		await page.locator(`[data-verse="${id}"]`).click()
@@ -405,7 +405,7 @@ test('copies skipped verses in canonical order as prose and shares a full deep l
 		() => (window as unknown as { lastCopy: string }).lastCopy,
 	)
 	expect(share).toContain(content)
-	expect(share).toBe(`${content}\n${new URL('/John/3/16,18-19?version=BSB', page.url()).href}`)
+	expect(share).toBe(`${content}\n${new URL('/John/3/16,18-19', page.url()).href}`)
 })
 for (const action of ['Copy', 'Share']) {
 	test(`failed ${action} copying keeps every selected fragment available for retry`, async ({ page }) => {
@@ -550,7 +550,7 @@ test('opens incoming deep links directly to the selected reference', async ({
 	page,
 	isMobile,
 }) => {
-	await page.goto('/John/3/16,18,20-21?version=BSB')
+	await page.goto('/John/3/16,18,20-21')
 	await settled(page)
 	await expect(
 		page.getByRole('button', { name: 'Open reference picker' }),
@@ -630,7 +630,7 @@ for (const outcome of ['success', 'failed', 'cancelled'] as const) {
 			const state = window as unknown as { lastShare: ShareData; lastCopy?: string }
 			return { shared: state.lastShare, copied: state.lastCopy }
 		})
-		expect(state.shared.text).toMatch(/^[^\n]+ John 3:16 BSB\nhttps?:\/\/[^\n]+\/John\/3\/16\?version=BSB$/)
+		expect(state.shared.text).toMatch(/^[^\n]+ John 3:16\nhttps?:\/\/[^\n]+\/John\/3\/16$/)
 		expect(state.shared.url).toBeUndefined()
 		if (outcome === 'failed') expect(state.copied).toBe(state.shared.text)
 		else expect(state.copied).toBeUndefined()

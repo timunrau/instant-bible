@@ -7,7 +7,7 @@ const output = resolve(import.meta.dirname, '../docs/screenshots')
 
 test('capture README screenshots', async ({ page }, testInfo) => {
 	await mkdir(output, { recursive: true })
-	await page.goto('/Psalm/23?version=BSB')
+	await page.goto('/Psalm/23')
 	await settled(page)
 	await expect(page.locator('#chapter-psa-23 h2')).toBeVisible()
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')

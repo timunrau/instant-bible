@@ -16,7 +16,7 @@ test('arrow keys navigate chapters across books, preserve Back, and stop at Scri
 	await jump(page, 'Malachi4:6')
 	const previousTop = await verseTop(page, 'mal.4.6')
 	await page.keyboard.press('ArrowRight')
-	await expect(page).toHaveURL(/\/Matthew\/1\?version=BSB$/)
+	await expect(page).toHaveURL(/\/Matthew\/1$/)
 	await expect.poll(() => page.locator('#chapter-mat-1').evaluate((e) => Math.round(e.getBoundingClientRect().top))).toBe(48)
 	await page.goBack()
 	await expect(reference).toHaveText('Malachi 4')
@@ -44,16 +44,16 @@ test('slash focuses the picker in the key event and leaves input editing and dia
 	await input.press('ArrowLeft')
 	await input.press('/')
 	await expect(input).toHaveValue('John 3:1/6')
-	await expect(page).toHaveURL(/\/Genesis\/1\?version=BSB$/)
+	await expect(page).toHaveURL(/\/Genesis\/1$/)
 	await input.fill('John 3:16')
 	await input.press('Enter')
-	await expect(page).toHaveURL(/\/John\/3\/16\?version=BSB$/)
+	await expect(page).toHaveURL(/\/John\/3\/16$/)
 	await page.getByRole('button', { name: 'Reader settings', exact: true }).click()
 	await page.keyboard.press('ArrowRight')
 	await page.keyboard.press('/')
 	await expect(page.getByRole('dialog', { name: 'Reader settings' })).toBeVisible()
 	await expect(page.getByRole('dialog', { name: 'Go to a passage' })).toBeHidden()
-	await expect(page).toHaveURL(/\/John\/3\/16\?version=BSB$/)
+	await expect(page).toHaveURL(/\/John\/3\/16$/)
 })
 
 test('passage submission returns focus without a ring and Tab restores the keyboard indicator', async ({ page }) => {
@@ -89,7 +89,7 @@ test('Ctrl+C and Cmd+C use semantic verse copying and preserve native copy', asy
 		const text = await page.evaluate(() => (window as unknown as { lastCopy: string }).lastCopy)
 		expect(text).toMatch(/^For God so loved/)
 		expect(text).toContain('18 Whoever believes')
-		expect(text).toMatch(/^[^\n]+ John 3:16, 18–19 BSB$/)
+		expect(text).toMatch(/^[^\n]+ John 3:16, 18–19$/)
 		await page.evaluate(() => { (window as unknown as { lastCopy: string }).lastCopy = '' })
 	}
 	const native = await page.locator('[data-verse="jhn.3.16"]').evaluate((e) => {
@@ -122,7 +122,7 @@ test('shortcuts do not override composition, modified arrows or editable content
 	})
 	expect(prevented).toEqual([false, false, false])
 	await expect(page.getByRole('dialog', { name: 'Go to a passage' })).toBeHidden()
-	await expect(page).toHaveURL(/\/Genesis\/1\?version=BSB$/)
+	await expect(page).toHaveURL(/\/Genesis\/1$/)
 })
 
 test('Escape dismisses the picker first, then clears selected verses without moving the reader', async ({ page }) => {
