@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/timunrau/instant-bible/compare/v1.2.2...v1.3.0) (2026-10-29)
+
+### Features
+
+* add copy and share formatting settings ([6173675](https://github.com/timunrau/instant-bible/commit/6173675999e56a15ba203acebbd46505dda8ec9a))
+
 ## [1.2.2](https://github.com/timunrau/instant-bible/compare/v1.2.1...v1.2.2) (2026-10-28)
 
 ### Bug Fixes
