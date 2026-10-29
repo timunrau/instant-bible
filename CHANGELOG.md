@@ -1,3 +1,9 @@
+## [1.3.1](https://github.com/timunrau/instant-bible/compare/v1.3.0...v1.3.1) (2026-10-29)
+
+### Bug Fixes
+
+* omit translation version from passage URLs and exports ([a9d6e00](https://github.com/timunrau/instant-bible/commit/a9d6e00ed42935ffe2944efdf063deab91fa59c4))
+
 ## [1.3.0](https://github.com/timunrau/instant-bible/compare/v1.2.2...v1.3.0) (2026-10-29)
 
 ### Features
