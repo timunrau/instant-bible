@@ -34,4 +34,6 @@ test('canonical dialog visual states', async ({ page }) => {
 		.getByRole('button', { name: 'Reader settings', exact: true })
 		.click()
 	await expect(page).toHaveScreenshot('settings-amoled.png')
+	await page.getByRole('checkbox', { name: 'Superscript numbers', exact: true }).scrollIntoViewIfNeeded()
+	await expect(page).toHaveScreenshot('copy-share-settings-amoled.png')
 })

@@ -1,4 +1,9 @@
 export const FORMAT = 1
+export interface CopyFormat {
+	includeVerseNumbers: boolean
+	boldReference: boolean
+	superscriptNumbers: boolean
+}
 export interface VerseRef {
 	book: string
 	chapter: number

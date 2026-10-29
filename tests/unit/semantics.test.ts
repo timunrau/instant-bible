@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { normalizeChapter, inlineText } from '../../src/lib/normalize'
 import { copyText } from '../../src/lib/clipboard'
-import { parseReference } from '../../src/lib/references'
+import { formatReferences, parseReference } from '../../src/lib/references'
 import ScriptureChapter from '../../src/components/ScriptureChapter.vue'
 import ReaderSettings from '../../src/components/ReaderSettings.vue'
 import type { BibleBook } from '../../src/lib/types'
@@ -112,6 +112,66 @@ describe('plain-text Scripture copying', () => {
 		const text = copyText(parseReference('Gen1:26-28')!.verses, [c])
 		expect(text.match(/27 /g)).toHaveLength(1)
 		expect(text).not.toContain('Cited in Matthew')
+	})
+})
+describe('Copy and Share formatting', () => {
+	const formats = [true, false].flatMap((includeVerseNumbers) =>
+		[true, false].flatMap((boldReference) =>
+			[true, false].map((superscriptNumbers) => ({ includeVerseNumbers, boldReference, superscriptNumbers })),
+		),
+	)
+	it.each(formats)('formats skipped verses with %j', (format) => {
+		const refs = parseReference('John3:19,16,18')!.verses
+		const text = copyText(refs, [chapter], format)
+		expect(text).toMatch(/^For God so loved/)
+		const prefix = format.superscriptNumbers ? '¹⁸' : '18'
+		expect(text.includes(`${prefix} Whoever believes`)).toBe(format.includeVerseNumbers)
+		expect(text).not.toContain('16 For God')
+		expect(text).not.toContain('¹⁶ For God')
+		expect(text.endsWith(format.boldReference ? '**John 3:16, 18–19 BSB**' : 'John 3:16, 18–19 BSB')).toBe(true)
+		expect(text.includes('**')).toBe(format.boldReference)
+		if (!format.includeVerseNumbers) expect(text.slice(0, text.indexOf('John 3:'))).not.toMatch(/[0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/)
+		expect(text).not.toMatch(/\n|God’s Love for the World/)
+	})
+	it.each([
+		'John3:16', 'Genesis1:26-28', 'Psalm23:1-6',
+		'John3:36-4:2', 'John21:25;Acts1:1-2', 'Psalm119:99-101',
+	])('preserves semantic prose and references for %s', (reference) => {
+		const refs = parseReference(reference)!.verses
+		const chapters = [...new Map(refs.map((r) => [`${r.book}.${r.chapter}`, book(r.book).chapters[r.chapter - 1]!])).values()]
+		const unnumbered = copyText(refs, chapters, { includeVerseNumbers: false, boldReference: false, superscriptNumbers: false })
+		const text = copyText(refs, chapters, { includeVerseNumbers: true, boldReference: true, superscriptNumbers: true })
+		const label = `${formatReferences(refs)} BSB`
+		const prose = text.slice(0, -` **${label}**`.length)
+		expect(prose.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+ /g, '')).toBe(unnumbered.slice(0, -` ${label}`.length))
+		expect(prose.match(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+ /g) ?? []).toHaveLength(refs.length - 1)
+		expect(text).toContain(`**${label}**`)
+		expect(text).not.toMatch(/\n|Cited in Matthew|A Psalm of David/)
+		if (reference === 'Psalm119:99-101') {
+			expect(text).toContain('¹⁰⁰ ')
+			expect(text).toContain('¹⁰¹ ')
+		}
+	})
+	it('updates accessible formatting checkboxes and retains disabled superscripts', async () => {
+		vi.stubGlobal('__APP_VERSION__', '0.1.0')
+		vi.stubGlobal('__BUILD_SHA__', 'test')
+		const w = mount(ReaderSettings, { props: { modelValue: { ...defaults } } })
+		for (const [label, key] of [
+			['Include verse numbers', 'includeVerseNumbers'],
+			['Bold reference (md)', 'boldReference'],
+			['Superscript numbers', 'superscriptNumbers'],
+		] as const) {
+			const checkbox = w.findAll('label').find((row) => row.text() === label)!.find('input')
+			await checkbox.setValue(!defaults[key])
+			expect(w.emitted('update:modelValue')!.at(-1)![0]).toEqual({ ...defaults, [key]: !defaults[key] })
+		}
+		await w.setProps({ modelValue: { ...defaults, includeVerseNumbers: false, superscriptNumbers: true } })
+		const superscript = w.findAll('label').find((row) => row.text() === 'Superscript numbers')!.find('input')
+		expect(superscript.attributes('disabled')).toBeDefined()
+		expect((superscript.element as HTMLInputElement).checked).toBe(true)
+		await w.setProps({ modelValue: { ...defaults, superscriptNumbers: true } })
+		expect(superscript.attributes('disabled')).toBeUndefined()
+		expect((superscript.element as HTMLInputElement).checked).toBe(true)
 	})
 })
 describe('semantic Scripture rendering', () => {

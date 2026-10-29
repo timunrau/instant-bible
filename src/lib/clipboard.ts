@@ -1,9 +1,14 @@
 import { inlineText } from './normalize'
 import { formatReferences, ordered, verseId } from './references'
-import type { Chapter, VerseRef } from './types'
+import type { Chapter, CopyFormat, VerseRef } from './types'
 export function copyText(
 	refs: VerseRef[],
 	chapters: Chapter[],
+	format: CopyFormat = {
+		includeVerseNumbers: true,
+		boldReference: false,
+		superscriptNumbers: false,
+	},
 ): string {
 	const selection = ordered(refs)
 	const ids = new Set(selection.map(verseId))
@@ -16,8 +21,12 @@ export function copyText(
 			const body = block.fragments
 				.filter((f) => ids.has(f.id))
 				.map((f) => {
-					const prefix =
-						f.id === first || numbered.has(f.id) ? '' : `${f.id.split('.')[2]} `
+					const number = f.id.split('.')[2]!
+					const digits = format.superscriptNumbers
+						? number.replace(/\d/g, (digit) => '⁰¹²³⁴⁵⁶⁷⁸⁹'[Number(digit)]!)
+						: number
+					const prefix = !format.includeVerseNumbers || f.id === first || numbered.has(f.id)
+						? '' : `${digits} `
 					numbered.add(f.id)
 					return prefix + inlineText(f.nodes).trim()
 				})
@@ -27,10 +36,6 @@ export function copyText(
 		}
 	}
 
-	return (
-		parts.join(' ').replace(/\s+/g, ' ') +
-		' ' +
-		formatReferences(selection) +
-		' BSB'
-	)
+	const reference = `${formatReferences(selection)} BSB`
+	return `${parts.join(' ').replace(/\s+/g, ' ')} ${format.boldReference ? `**${reference}**` : reference}`
 }

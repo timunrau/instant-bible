@@ -185,7 +185,7 @@ async function selectionText() {
 	const data = await Promise.all(
 		groups.map((r) => repository.chapter(r.book, r.chapter)),
 	)
-	return { text: copyText(refs, data), refs }
+	return { text: copyText(refs, data, settings.value), refs }
 }
 async function copy(share = false) {
 	copyError.value = ''

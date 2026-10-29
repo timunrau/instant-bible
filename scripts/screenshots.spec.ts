@@ -30,5 +30,6 @@ test('capture README screenshots', async ({ page }, testInfo) => {
 	await jump(page, 'John 3:16')
 	await page.getByRole('button', { name: 'Reader settings', exact: true }).click()
 	await expect(page.getByRole('dialog', { name: 'Reader settings' })).toBeVisible()
+	await page.getByRole('checkbox', { name: 'Superscript numbers', exact: true }).scrollIntoViewIfNeeded()
 	await capture('settings')
 })

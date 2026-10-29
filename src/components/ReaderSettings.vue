@@ -89,6 +89,34 @@ async function updateVersion() {
 				</button>
 			</div>
 		</fieldset>
+		<fieldset class="export-settings">
+			<legend>Copy &amp; share</legend>
+			<label>
+				<span>Include verse numbers</span>
+				<input
+					type="checkbox"
+					:checked="modelValue.includeVerseNumbers"
+					@change="update('includeVerseNumbers', ($event.target as HTMLInputElement).checked)"
+				/>
+			</label>
+			<label>
+				<span>Bold reference (md)</span>
+				<input
+					type="checkbox"
+					:checked="modelValue.boldReference"
+					@change="update('boldReference', ($event.target as HTMLInputElement).checked)"
+				/>
+			</label>
+			<label :class="{ 'export-disabled': !modelValue.includeVerseNumbers }">
+				<span>Superscript numbers</span>
+				<input
+					type="checkbox"
+					:checked="modelValue.superscriptNumbers"
+					:disabled="!modelValue.includeVerseNumbers"
+					@change="update('superscriptNumbers', ($event.target as HTMLInputElement).checked)"
+				/>
+			</label>
+		</fieldset>
 		<div class="attribution">
 			<p>{{ translation.name }}</p>
 			<a :href="translation.attributionUrl" target="_blank" rel="noreferrer">{{

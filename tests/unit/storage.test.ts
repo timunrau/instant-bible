@@ -85,6 +85,7 @@ describe('small defensive local persistence', () => {
 			theme: 'dark',
 		})
 		expect(readSettings()).toEqual({
+			...defaults,
 			size: 24,
 			font: 'sans',
 			spacing: 'normal',
@@ -94,6 +95,16 @@ describe('small defensive local persistence', () => {
 	it.each(['compact', 'normal', 'relaxed'] as const)('preserves saved %s spacing', (spacing) => {
 		writeJson('bible-settings', { spacing })
 		expect(readSettings().spacing).toBe(spacing)
+	})
+	it.each(['includeVerseNumbers', 'boldReference', 'superscriptNumbers'] as const)('validates and persists %s as a boolean', (key) => {
+		for (const value of [true, false]) {
+			writeJson('bible-settings', { [key]: value })
+			expect(readSettings()[key]).toBe(value)
+		}
+		for (const value of ['true', 'false', 0, 1, null, [], {}]) {
+			writeJson('bible-settings', { [key]: value })
+			expect(readSettings()[key]).toBe(defaults[key])
+		}
 	})
 	it('validates and clamps semantic reading anchors', () => {
 		const a = {

@@ -1,6 +1,6 @@
 import { fromId, verseId } from './references'
-import type { Anchor } from './types'
-export interface Settings {
+import type { Anchor, CopyFormat } from './types'
+export interface Settings extends CopyFormat {
 	font: 'serif' | 'sans'
 	size: number
 	spacing: 'compact' | 'normal' | 'relaxed'
@@ -11,6 +11,9 @@ export const defaults: Settings = {
 	size: 20,
 	spacing: 'normal',
 	theme: 'auto',
+	includeVerseNumbers: true,
+	boldReference: false,
+	superscriptNumbers: false,
 }
 export function readJson(key: string): unknown {
 	try {
@@ -29,6 +32,12 @@ export function writeJson(key: string, value: unknown) {
 export function readSettings(): Settings {
 	const value = readJson('bible-settings') as Partial<Settings> | null
 	return {
+		includeVerseNumbers: typeof value?.includeVerseNumbers === 'boolean'
+			? value.includeVerseNumbers : defaults.includeVerseNumbers,
+		boldReference: typeof value?.boldReference === 'boolean'
+			? value.boldReference : defaults.boldReference,
+		superscriptNumbers: typeof value?.superscriptNumbers === 'boolean'
+			? value.superscriptNumbers : defaults.superscriptNumbers,
 		font: value?.font === 'sans' ? 'sans' : 'serif',
 		size: [17, 18, 20, 22, 24, 27].includes(value?.size ?? 0)
 			? value!.size!
