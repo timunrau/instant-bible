@@ -29,7 +29,8 @@ test('capture README screenshots', async ({ page }, testInfo) => {
 
 	await jump(page, 'John 3:16')
 	await page.getByRole('button', { name: 'Reader settings', exact: true }).click()
-	await expect(page.getByRole('dialog', { name: 'Reader settings' })).toBeVisible()
-	await page.getByRole('checkbox', { name: 'Superscript numbers', exact: true }).scrollIntoViewIfNeeded()
+	const settings = page.getByRole('dialog', { name: 'Reader settings' })
+	await expect(settings).toBeVisible()
+	await expect(settings).toHaveJSProperty('scrollTop', 0)
 	await capture('settings')
 })

@@ -53,6 +53,8 @@ Product behavior is documented in the [product specification](docs/PRODUCT_SPEC.
 
 ## License
 
+[<img src="https://freely.giving/badges/fg_standard_pde.png" alt="Freely given: public-domain-equivalent" width="180">](https://freely.giving)
+
 Application code is licensed under [MIT-0](LICENSE). Scripture, bundled fonts, and dependencies retain their own licenses.
 
 Scripture attribution and license links are available in **Aa → Reading**. Font licenses are bundled in `public/fonts`.
