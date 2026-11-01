@@ -1,3 +1,9 @@
+## [1.3.2](https://github.com/timunrau/instant-bible/compare/v1.3.1...v1.3.2) (2026-11-01)
+
+### Bug Fixes
+
+* include BSB in copied and shared references ([9cbf271](https://github.com/timunrau/instant-bible/commit/9cbf27137c7040b7c4755b1297742df8ee3ac129))
+
 ## [1.3.1](https://github.com/timunrau/instant-bible/compare/v1.3.0...v1.3.1) (2026-10-29)
 
 ### Bug Fixes
