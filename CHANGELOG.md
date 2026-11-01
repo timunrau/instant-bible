@@ -1,3 +1,9 @@
+## [1.3.3](https://github.com/timunrau/instant-bible/compare/v1.3.2...v1.3.3) (2026-11-01)
+
+### Bug Fixes
+
+* enable superscript verse numbers by default ([35921ae](https://github.com/timunrau/instant-bible/commit/35921ae703540356954fb32a767503f7967fb6e0))
+
 ## [1.3.2](https://github.com/timunrau/instant-bible/compare/v1.3.1...v1.3.2) (2026-11-01)
 
 ### Bug Fixes
