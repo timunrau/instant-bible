@@ -78,8 +78,8 @@ describe('plain-text Scripture copying', () => {
 		const p = parseReference('John3:19,16,18')!
 		const text = copyText(p.verses, [chapter])
 		expect(text).toMatch(/^For God so loved/)
-		expect(text).toContain('18 Whoever believes')
-		expect(text).toContain('19 And this is the verdict')
+		expect(text).toContain('¹⁸ Whoever believes')
+		expect(text).toContain('¹⁹ And this is the verdict')
 		expect(text).toMatch(/^[^\n]+ John 3:16, 18–19 BSB$/)
 		expect(text).not.toContain('16 For')
 		expect(text).not.toContain('God’s Love for the World')
@@ -89,8 +89,8 @@ describe('plain-text Scripture copying', () => {
 			parseReference('John3:16-18')!.verses,
 			[chapter],
 		)
-		expect(text).toMatch(/17 For God/)
-		expect(text).not.toMatch(/\n17 /)
+		expect(text).toMatch(/¹⁷ For God/)
+		expect(text).not.toMatch(/\n¹⁷ /)
 	})
 	it.each(['Genesis1:31', 'Genesis1:26-31'])('flattens source paragraph breaks when copying %s', (reference) => {
 		const text = copyText(parseReference(reference)!.verses, [book('gen').chapters[0]!])
@@ -103,14 +103,14 @@ describe('plain-text Scripture copying', () => {
 		const c = book('psa').chapters[22]!
 		const text = copyText(parseReference('Psalm23:1-6')!.verses, [c])
 		expect(text).toMatch(/^The LORD is my shepherd/)
-		expect(text).toContain('2 He makes me lie down')
+		expect(text).toContain('² He makes me lie down')
 		expect(text.split('\n')).toHaveLength(1)
 		expect(text).not.toContain('A Psalm of David')
 	})
 	it('numbers a split semantic verse only once', () => {
 		const c = book('gen').chapters[0]!
 		const text = copyText(parseReference('Gen1:26-28')!.verses, [c])
-		expect(text.match(/27 /g)).toHaveLength(1)
+		expect(text.match(/²⁷ /g)).toHaveLength(1)
 		expect(text).not.toContain('Cited in Matthew')
 	})
 })
@@ -165,6 +165,7 @@ describe('Copy and Share formatting', () => {
 			await checkbox.setValue(!defaults[key])
 			expect(w.emitted('update:modelValue')!.at(-1)![0]).toEqual({ ...defaults, [key]: !defaults[key] })
 		}
+		await w.setProps({ modelValue: { ...defaults, superscriptNumbers: false } })
 		await w.setProps({ modelValue: { ...defaults, includeVerseNumbers: false, superscriptNumbers: true } })
 		const superscript = w.findAll('label').find((row) => row.text() === 'Superscript numbers')!.find('input')
 		expect(superscript.attributes('disabled')).toBeDefined()

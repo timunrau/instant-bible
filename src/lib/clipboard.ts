@@ -7,7 +7,7 @@ export function copyText(
 	format: CopyFormat = {
 		includeVerseNumbers: true,
 		boldReference: false,
-		superscriptNumbers: false,
+		superscriptNumbers: true,
 	},
 ): string {
 	const selection = ordered(refs)

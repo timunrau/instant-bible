@@ -88,7 +88,7 @@ test('Ctrl+C and Cmd+C use semantic verse copying and preserve native copy', asy
 		await expect(page.locator('.selection-tray')).toHaveCount(0)
 		const text = await page.evaluate(() => (window as unknown as { lastCopy: string }).lastCopy)
 		expect(text).toMatch(/^For God so loved/)
-		expect(text).toContain('18 Whoever believes')
+		expect(text).toContain('¹⁸ Whoever believes')
 		expect(text).toMatch(/^[^\n]+ John 3:16, 18–19 BSB$/)
 		await page.evaluate(() => { (window as unknown as { lastCopy: string }).lastCopy = '' })
 	}

@@ -67,6 +67,7 @@ describe('small defensive local persistence', () => {
 	beforeEach(() => localStorage.clear())
 	it('uses readable defaults on first launch or corrupt preferences', () => {
 		expect(readSettings()).toEqual(defaults)
+		expect(readSettings()).toMatchObject({ includeVerseNumbers: true, superscriptNumbers: true, boldReference: false })
 		localStorage.setItem('bible-settings', 'not json')
 		expect(readSettings()).toEqual(defaults)
 		writeJson('bible-settings', {

@@ -13,7 +13,7 @@ export const defaults: Settings = {
 	theme: 'auto',
 	includeVerseNumbers: true,
 	boldReference: false,
-	superscriptNumbers: false,
+	superscriptNumbers: true,
 }
 export function readJson(key: string): unknown {
 	try {
