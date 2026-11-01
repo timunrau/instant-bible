@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test'
 import { jump, settled, theme } from './helpers'
+
+test.skip(process.platform !== 'darwin', 'Visual baselines are maintained locally on macOS; CI runs functional tests only.')
+
 test.beforeEach(async ({ page }) => {
 	await page.goto('/')
 	await settled(page)

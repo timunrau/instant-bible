@@ -9,23 +9,23 @@
 		"release": "semantic-release",
 		"commits:check": "node scripts/check-commits.mjs",
 		"dev": "vite --host 0.0.0.0",
-		"build": "vue-tsc --noEmit && vite build",
+		"build": "vite build",
 		"build:pages": "node scripts/build-pages.mjs",
 		"preview": "vite preview --host 0.0.0.0",
 		"lint": "eslint .",
 		"typecheck": "vue-tsc --noEmit",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"test:e2e": "playwright test",
+		"test:e2e": "npm run build && npm run bundle:check && playwright test",
 		"test:pages": "npm run build:pages && npm run bundle:check && playwright test --config playwright.pages.config.ts",
-		"test:visual": "playwright test visual",
-		"test:visual:update": "playwright test visual --update-snapshots",
+		"test:visual": "npm run build && playwright test visual",
+		"test:visual:update": "npm run build && playwright test visual --update-snapshots",
 		"screenshots": "npm run build && playwright test --config playwright.screenshots.config.ts",
 		"bible:update-bsb": "tsx scripts/update-bsb.ts",
 		"bible:validate": "tsx scripts/validate-bsb.ts",
 		"bundle:check": "node scripts/check-bundle.mjs",
 		"icons:generate": "node scripts/generate-icons.mjs",
-		"check": "npm run lint && npm run typecheck && npm run bible:validate && npm run test && npm run build && npm run bundle:check && npm run test:e2e && npm run test:pages"
+		"check": "npm run lint && npm run typecheck && npm run bible:validate && npm run test && npm run test:e2e && npm run test:pages"
 	},
 	"dependencies": {
 		"vue": "^3.5.43"

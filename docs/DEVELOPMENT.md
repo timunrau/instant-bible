@@ -20,32 +20,36 @@ npx playwright install chromium
 npm run check
 ```
 
+Checks run directly on your machine without Docker. `check` runs lint, strict types, BSB validation, unit/components, and the browser suites. It checks types once and builds once for root hosting and once for Pages, checking the JavaScript budget for each build. macOS also compares the committed visual baselines; other platforms explicitly skip the visual suite.
+
 | Command | Purpose |
 | --- | --- |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | Strict TypeScript and Vue types |
 | `npm run test` | Unit/component specifications |
 | `npm run test:watch` | Watch unit/component tests |
-| `npm run test:e2e` | Desktop/mobile browser, offline, interaction, visual tests |
-| `npm run test:visual` | Canonical screenshots |
-| `npm run test:visual:update` | Deliberate baseline regeneration; inspect all differences |
+| `npm run test:e2e` | Fresh root build and JS budget, then desktop/mobile browser, offline, interaction tests; visual comparisons on macOS |
+| `npm run test:pages` | Fresh Pages build and JS budget, then desktop/mobile hosting and offline tests |
+| `npm run test:visual` | Fresh root build, then canonical screenshot comparisons on macOS |
+| `npm run test:visual:update` | Fresh root build and deliberate macOS baseline regeneration; inspect all differences |
+| `npm run screenshots` | Fresh root build and automatic capture of the three mobile README screenshots |
 | `npm run bible:validate` | All BSB books/chapters/verses, omissions and SHA-256 checksums |
 | `npm run bible:update-bsb` | Fetch official BSB HTML, normalize, regenerate assets/index/fonts |
-| `npm run build` | Typecheck and production build/PWA precache |
+| `npm run build` | Production assets/PWA precache; run `typecheck` separately or use `check` |
 | `npm run bundle:check` | Fail above 75 KiB gzipped application JS |
 | `npm run icons:generate` | Rebuild favicon/PWA/Apple icons from SVG master |
 
 BSB assets and metadata are committed. Normal CI/builds never contact fetch(bible). Only the development updater needs its network API; the reader supports bundled BSB only. The updater uses supported `FetchClient`/`BibleBookHtml.get_chapter()` interfaces. It preserves source structure and records canonical verse omissions without inventing text. Attribution/license details live in reader settings. Fonts are bundled under the SIL Open Font License.
 
-Visual baselines include macOS and Linux. For CI-matching updates:
+macOS is the only visual baseline environment, with 18 reference images covering desktop and mobile. Compare them locally with `npm run test:visual`. For deliberate updates, run on your Mac:
 
 ```bash
-docker build -f Dockerfile.test -t instant-bible:test .
-docker run --rm -v "$PWD/tests/e2e/visual.spec.ts-snapshots:/app/tests/e2e/visual.spec.ts-snapshots" instant-bible:test npx playwright test visual --update-snapshots
-docker run --rm instant-bible:test
+npm run test:visual:update
 ```
 
-Review screenshots before committing. Offline tests install the production service worker, disable the browser network, and navigate/reload unseen BSB passages.
+Review every changed baseline before committing. Linux CI runs the functional suites without screenshot comparisons or baseline generation. Offline tests install the production service worker, disable the browser network, and navigate/reload unseen BSB passages.
+
+README screenshots are separate from regression baselines. Whenever the UI changes, run `npm run screenshots`, review the three generated mobile PNGs in `docs/screenshots`, and include them with the change. The command builds production, manages its own preview server, and captures the reader, reference editor, and settings in a fresh light-theme phone context. Keep README screenshots mobile-only, in one theme, with standard Markdown image embeds.
 
 The app JS budget excludes Bible/font/static assets and generated service-worker code. The BSB-only reader has no runtime fetch(bible) client; current output is approximately 41 KiB gzip against a 75 KiB limit.
 
@@ -76,7 +80,9 @@ The app is also hosted at [Instant Bible on GitHub Pages](https://timunrau.githu
 
 Pages serves `404.html` (a copy of the reader shell) for direct passage links without a redirect. First-time deep-link requests have HTTP status 404 but open the requested Scripture normally; after installation, the service worker serves the shell for navigation and offline reloads. Pages controls HTTP cache headers; the nginx-specific headers and `/healthz` apply only to Docker hosting. `npm run test:pages`, also included in `npm run check`, verifies desktop/mobile direct links against a static Pages-style server, BSB selection links, history, and offline restarts.
 
-The workflow runs `npm ci` and all quality gates in `Dockerfile.test` so browser and font rendering match the Linux visual baselines, then verifies production container health, deep links, and cache headers. CI publishes only the Pages site. Self-hosting builds its image directly from the checkout.
+Full CI runs on pushes to `main` and PR opens, code updates, and reopens. PR edits run only commit/title validation in a separate concurrency group, so editing metadata cannot cancel active code checks. Feature-branch pushes do not start a duplicate workflow alongside the PR run.
+
+The check job runs directly on GitHub's Linux runner with Node 24, `npm ci`, `npx playwright install --with-deps chromium`, and `npm run check`. It runs functional, offline, Pages-hosting, data, build, and bundle-budget checks; visual comparisons stay local to macOS. CI does not build or test Docker containers and publishes only the Pages site. Self-hosting builds its image directly from the checkout.
 
 ## Releases
 
