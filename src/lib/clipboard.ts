@@ -36,6 +36,6 @@ export function copyText(
 		}
 	}
 
-	const reference = formatReferences(selection)
+	const reference = `${formatReferences(selection)} BSB`
 	return `${parts.join(' ').replace(/\s+/g, ' ')} ${format.boldReference ? `**${reference}**` : reference}`
 }

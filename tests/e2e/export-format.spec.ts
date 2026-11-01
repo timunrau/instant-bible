@@ -53,7 +53,7 @@ for (const action of ['Copy', 'keyboard', 'native share', 'unavailable share', '
 				return { exported, shared }
 			})
 			expect(state.exported).toMatch(/^For God so loved/)
-			expect(state.exported).toContain(' **John 3:16, 18**')
+			expect(state.exported).toContain(' **John 3:16, 18 BSB**')
 			expect(state.exported.includes('¹⁸ Whoever believes')).toBe(includeVerseNumbers)
 			expect(state.exported).not.toContain('18 Whoever believes')
 			if (action.includes('share')) {
