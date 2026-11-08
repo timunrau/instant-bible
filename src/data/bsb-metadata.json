@@ -6,16 +6,9 @@
   "attributionUrl": "https://berean.bible/",
   "licenses": [
     {
-      "id": "public",
       "name": "Public domain",
-      "restrictions": {
-        "forbid_commercial": false,
-        "forbid_derivatives": false,
-        "forbid_attributionless": false,
-        "forbid_limitless": false,
-        "forbid_other": false
-      },
-      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      "url": "https://berean.bible/licensing.htm",
+      "restrictions": {}
     }
   ],
   "books": [

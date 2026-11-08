@@ -34,12 +34,12 @@ Checks run directly on your machine without Docker. `check` runs lint, strict ty
 | `npm run test:visual:update` | Fresh root build and deliberate macOS baseline regeneration; inspect all differences |
 | `npm run screenshots` | Fresh root build and automatic capture of the three mobile README screenshots |
 | `npm run bible:validate` | All BSB books/chapters/verses, omissions and SHA-256 checksums |
-| `npm run bible:update-bsb` | Fetch official BSB HTML, normalize, regenerate assets/index/fonts |
+| `npm run bible:update-bsb` | Import pinned official BSB USJ locally, regenerate assets/index/fonts |
 | `npm run build` | Production assets/PWA precache; run `typecheck` separately or use `check` |
 | `npm run bundle:check` | Fail above 75 KiB gzipped application JS |
 | `npm run icons:generate` | Rebuild favicon/PWA/Apple icons from SVG master |
 
-BSB assets and metadata are committed. Normal CI/builds never contact fetch(bible). Only the development updater needs its network API; the reader supports bundled BSB only. The updater uses supported `FetchClient`/`BibleBookHtml.get_chapter()` interfaces. It preserves source structure and records canonical verse omissions without inventing text. Attribution/license details live in reader settings. Fonts are bundled under the SIL Open Font License.
+BSB assets, metadata, and the unchanged official USJ source archive are committed. Builds and the development updater work without network access. The updater verifies `sources/bsb/provenance.json` against the archive, preserves source structure, and records canonical verse omissions without inventing text. To update the edition, deliberately replace the archive from the publisher's downloads page, record its URL/retrieval date/checksum, run the updater, and review content differences before accepting the generated assets. See [source review](SOURCE_REVIEW.md). Attribution/license details live in reader settings. Fonts are bundled under the SIL Open Font License.
 
 macOS is the only visual baseline environment, with 18 reference images covering desktop and mobile. Compare them locally with `npm run test:visual`. For deliberate updates, run on your Mac:
 
@@ -51,7 +51,7 @@ Review every changed baseline before committing. Linux CI runs the functional su
 
 README screenshots are separate from regression baselines. Whenever the UI changes, run `npm run screenshots`, review the three generated mobile PNGs in `docs/screenshots`, and include them with the change. The command builds production, manages its own preview server, and captures the reader, reference editor, and settings in a fresh light-theme phone context. Keep README screenshots mobile-only, in one theme, with standard Markdown image embeds.
 
-The app JS budget excludes Bible/font/static assets and generated service-worker code. The BSB-only reader has no runtime fetch(bible) client; current output is approximately 41 KiB gzip against a 75 KiB limit.
+The app JS budget excludes Bible/font/static assets and generated service-worker code. The BSB-only reader uses only generated local Scripture data; current output is approximately 43 KiB gzip against a 75 KiB limit.
 
 ## Self-hosting with Docker
 

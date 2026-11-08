@@ -1,4 +1,4 @@
-export const FORMAT = 1
+export const FORMAT = 2
 export interface CopyFormat {
 	includeVerseNumbers: boolean
 	boldReference: boolean
@@ -18,6 +18,7 @@ export interface Passage {
 export type Inline =
 	| { kind: 'text'; text: string }
 	| { kind: 'em' | 'strong' | 'smallcaps'; children: Inline[] }
+	| { kind: 'reference'; target: string; children: Inline[] }
 	| { kind: 'note'; marker: string; children: Inline[] }
 export interface Fragment {
 	id: string
@@ -25,7 +26,7 @@ export interface Fragment {
 	nodes: Inline[]
 }
 export interface Block {
-	kind: 'paragraph' | 'poetry' | 'heading' | 'break'
+	kind: 'paragraph' | 'poetry' | 'heading' | 'reference' | 'break'
 	indent: number
 	fragments: Fragment[]
 }

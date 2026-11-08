@@ -1,25 +1,21 @@
-import { FetchClient } from '@gracious.tech/fetch-client'
+import { unzipSync } from 'fflate'
+import provenance from '../sources/bsb/provenance.json'
+import { importUsj, type UsjNode } from './import-usj'
 import {
 	books_ordered,
 	book_names_english,
 	last_verse,
 } from '@gracious.tech/bible-references'
-import { parseHTML } from 'linkedom'
-import { mkdir, writeFile, cp, readdir, unlink } from 'node:fs/promises'
+import { mkdir, writeFile, cp, readdir, unlink, readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
-import { normalizeBook } from '../src/lib/normalize'
+import { FORMAT } from '../src/lib/types'
 import type { Translation } from '../src/lib/types'
 
-const client = new FetchClient({
-	usage: { limitless: true, derivatives: true },
-	remember_fetches: false,
-})
-const collection = await client.fetch_collection()
 const path = 'public/bibles/v1/BSB'
 await mkdir(path, { recursive: true })
-const meta = collection.bibles.get_resource('eng_bsb')
-if (!meta)
-	throw new Error('BSB is not available under the required usage license')
+const raw = await readFile('sources/bsb/bsb_usj.zip')
+if (createHash('sha256').update(raw).digest('hex') !== provenance.sha256) throw new Error('BSB source checksum mismatch')
+const archive = unzipSync(raw)
 const checksums: Record<string, string> = {}
 const assets: Record<string, string> = {}
 const omitted: string[] = []
@@ -28,27 +24,13 @@ await Promise.all(
 	Array.from({ length: 4 }, async () => {
 		while (next < books_ordered.length) {
 			const book = books_ordered[next++]!
-			const source = await collection.bibles.fetch_book('eng_bsb', book, 'html')
-			const chapters = last_verse[book]!.map((_, i) =>
-				source.get_chapter(i + 1, { attribute: false }),
-			)
-			const data = normalizeBook(
-				book,
-				book_names_english[book]!,
-				chapters,
-				(html) => parseHTML(`<html><body>${html}</body></html>`).document,
-			)
+			const entry = archive[`bsb_usj/${book.toUpperCase()}.usj`]
+			if (!entry) throw new Error(`Missing source book ${book}`)
+			const data = importUsj(JSON.parse(new TextDecoder().decode(entry)) as UsjNode, book, book_names_english[book]!)
 			for (const chapter of data.chapters) {
 				const actual = chapter.blocks.flatMap((b) =>
 					b.fragments.filter((f) => f.number).map((f) => f.number!),
 				)
-				const sourceNumbers = [
-					...chapters[chapter.number - 1]!.matchAll(/data-v="\d+:(\d+)"/g),
-				].map((m) => Number(m[1]))
-				if (JSON.stringify(actual) !== JSON.stringify(sourceNumbers))
-					throw new Error(
-						`Normalization lost a verse: ${book} ${chapter.number}`,
-					)
 				for (let n = 1; n <= last_verse[book]![chapter.number - 1]!; n++)
 					if (!actual.includes(n))
 						omitted.push(`${book}.${chapter.number}.${n}`)
@@ -70,17 +52,17 @@ await Promise.all(
 const translation: Translation = {
 	id: 'eng_bsb',
 	abbreviation: 'BSB',
-	name: meta.name,
-	attribution: meta.attribution,
-	attributionUrl: meta.attribution_url,
-	licenses: meta.licenses,
+	name: 'Berean Standard Bible',
+	attribution: provenance.attribution,
+	attributionUrl: 'https://berean.bible/',
+	licenses: [{ name: provenance.license, url: provenance.licenseUrl, restrictions: {} }],
 	books: [...books_ordered],
 }
 await writeFile(
 	`${path}/metadata.json`,
 	JSON.stringify(
 		{
-			format: 1,
+			format: FORMAT,
 			...translation,
 			omittedCanonicalVerses: omitted.sort(),
 			checksums: Object.fromEntries(

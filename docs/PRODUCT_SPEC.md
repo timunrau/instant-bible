@@ -24,9 +24,9 @@
 
 ## Data and offline
 
-- Real BSB data from fetch(bible) ships in the repository and is precached with the app/fonts. Normal builds never fetch Scripture. Content-addressed book filenames allow immutable HTTP caching.
+- Real BSB data from the pinned official USJ archive ships in the repository and is precached with the app/fonts. Normal builds never fetch Scripture. Content-addressed book filenames allow immutable HTTP caching.
 - Generated metadata includes SHA-256 checksums and source-omitted canonical verses. Missing source verses are never invented; navigating to an omitted number chooses the nearest available verse in that chapter.
-- BSB is the only supported Bible. Its attribution and license links remain accessible in settings. The fetch(bible) client is used only by the development updater; it is excluded from application JavaScript.
+- BSB is the only supported Bible. Its attribution and license links remain accessible in settings. The official USJ archive and importer are development assets, excluded from application JavaScript and the precache. The updater reads the committed archive without network access.
 - Optional-translation caches from older releases are removed in the background without touching the BSB service-worker precache or unrelated caches. BSB cannot be removed.
 - Precached BSB navigation remains local under the service worker. Denied persistence/storage never blocks BSB reading.
 - Background PWA updates wait for the old app to close; no automatic reload interrupts reading. Tapping the version in Reading settings explicitly checks for an update, waits for its complete installation, activates it, saves the semantic reading anchor, and reloads. Other open readers never reload automatically. Offline, failed, and timed-out checks keep the current reader and precached BSB intact, show a status, and allow retry. No external scripts, fonts, analytics, database, or backend.
@@ -36,7 +36,7 @@
 - Canonical paths: `/John/3`, `/John/3/16-18`, numbered books use hyphens. Generated passage URLs omit the translation version and have no query string unless needed for a selection.
 - Subdirectory deployments prefix canonical paths and local assets with the deployment base (for example `/instant-bible/John/3`). Direct links preserve passage and selection in BSB. GitHub Pages serves the reader shell as its custom 404 document; installed service workers serve normal/offline navigation from the precached shell.
 - Arbitrary multi-chapter/book selections use a stable `selection` query of canonical IDs. Legacy links with a `version` query (including BSB or older translations) open the intended passage/selection in BSB and normalize to a URL without that parameter, without a download.
-- Typed submissions, footnote cross-reference links, and chapter swipes push history entries. Vertical scrolling replaces the current entry at a throttled cadence. Back restores the semantic position saved before the jump.
+- Typed submissions, heading and footnote cross-reference links, and chapter swipes push history entries. Vertical scrolling replaces the current entry at a throttled cadence. Back restores the semantic position saved before the jump.
 - Desktop Left/Right arrow keys jump one chapter, cross book boundaries, and stop at the ends of Scripture. `/` opens and synchronously focuses the reference picker. Ctrl+C (Cmd+C on Mac) copies semantically selected verses using the same output and confirmation as Copy. Escape dismisses an open dialog first; otherwise it clears the verse selection and restores the normal bottom bar. Other shortcuts leave typing, composition, dialogs, modified navigation keys, and native text selection to the browser.
 - Document title follows `Romans 8 — Bible`.
 
@@ -50,6 +50,8 @@
 - Desktop selection shows a small Ctrl+C hint (⌘C on Mac) just below the Copy pill. Touch/mobile layouts hide the hint.
 - Share includes complete selected Scripture, the reference followed by BSB at the end of the same line, and a selection deep link on its own next line. The same complete text payload is passed to Web Share or copied when sharing is unavailable or fails. Successful sharing or fallback copying clears selection and restores the normal bottom bar without moving the reader, showing a separate brief green “Shared” or “Copied” status. Cancellation or failed fallback copying preserves selection; a cancelled share does not copy.
 - Footnotes use subtle superscripts with expanded tap targets. Small phone sheets/desktop anchored popovers preserve reading position. Explicit canonical Bible citations in source footnotes are clickable passage links, using BSB and working offline. Following one closes the footnote, clears selection, and jumps to the first cited verse without highlighting it. Back restores the prior semantic reading position. References outside the supported canon remain source text.
+
+Heading cross-references remain visible as small passage links without underlines beneath source headings, preserving punctuation and ordering. They use the same navigation, focus, history, and offline behavior as footnote links, and never become verse-selection or copy/share content. Broad source book ranges open their first book at chapter 1.
 
 ## Settings and exclusions
 

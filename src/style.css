@@ -652,3 +652,21 @@ a {
 		transition: none !important;
 	}
 }
+
+.reference {
+	font-size: 0.72em;
+	line-height: 1.6;
+	color: var(--muted);
+	margin: -0.3em 0 1em;
+}
+.heading:has(+ .reference) {
+	margin-bottom: 0.5em;
+}
+.reference a {
+	color: inherit;
+	text-decoration: none;
+}
+.reference a:focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: 3px;
+}

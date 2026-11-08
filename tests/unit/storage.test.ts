@@ -1,3 +1,4 @@
+import { FORMAT } from '../../src/lib/types'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { BibleRepository } from '../../src/lib/bible'
 import assets from '../../src/data/bsb-assets.json'
@@ -38,7 +39,7 @@ function memoryStorage() {
 describe('bundled BSB storage', () => {
 	it('loads bundled content without Cache Storage and reuses in-memory books', async () => {
 		const repo = new BibleRepository(undefined)
-		const data = { format: 1, book: 'jhn', chapters: [{ book: 'jhn', number: 3, blocks: [] }] }
+		const data = { format: FORMAT, book: 'jhn', chapters: [{ book: 'jhn', number: 3, blocks: [] }] }
 		const network = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json(data))
 		expect(await repo.loadBook('jhn')).toEqual(data)
 		expect(await repo.loadBook('jhn')).toEqual(data)
@@ -47,7 +48,7 @@ describe('bundled BSB storage', () => {
 	it('allows retry after a failed bundled-book request', async () => {
 		const repo = new BibleRepository(undefined)
 		vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('', { status: 503 }))
-			.mockResolvedValueOnce(Response.json({ format: 1, book: 'jhn', chapters: [{}] }))
+			.mockResolvedValueOnce(Response.json({ format: FORMAT, book: 'jhn', chapters: [{}] }))
 		await expect(repo.loadBook('jhn')).rejects.toThrow('unavailable')
 		await expect(repo.loadBook('jhn')).resolves.toMatchObject({ book: 'jhn' })
 	})

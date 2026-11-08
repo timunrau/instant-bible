@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import InlineNodes from './InlineNodes.vue'
 import { nameOf } from '../lib/bible'
-import type { Chapter, Fragment, Inline } from '../lib/types'
+import type { Chapter, Fragment, Inline, Passage } from '../lib/types'
 const props = defineProps<{
 	chapter: Chapter
 	selected: Set<string>
@@ -15,7 +15,7 @@ const verseNumbers = computed(() => {
 	for (const block of props.chapter.blocks) {
 		for (const fragment of block.fragments) {
 			if (fragment.number) pending.set(fragment.id, fragment.number)
-			if (block.kind === 'heading') continue
+			if (block.kind === 'heading' || block.kind === 'reference') continue
 			const number = pending.get(fragment.id)
 			if (number) {
 				numbers.set(fragment, number)
@@ -26,6 +26,7 @@ const verseNumbers = computed(() => {
 	return numbers
 })
 const emit = defineEmits<{
+	navigate: [passage: Passage]
 	note: [node: Extract<Inline, { kind: 'note' }>, element: HTMLElement]
 }>()
 </script>
@@ -51,7 +52,7 @@ const emit = defineEmits<{
 		>
 			<template v-for="(fragment, j) in block.fragments" :key="j">
 				<span
-					v-if="fragment.id && block.kind !== 'heading'"
+					v-if="fragment.id && block.kind !== 'heading' && block.kind !== 'reference'"
 					:data-verse="fragment.id"
 					class="verse"
 					:class="{
@@ -65,11 +66,13 @@ const emit = defineEmits<{
 					><InlineNodes
 						:nodes="fragment.nodes"
 						@note="(n, e) => emit('note', n, e)"
+						@navigate="(p) => emit('navigate', p)"
 				/></span>
 				<InlineNodes
 					v-else
 					:nodes="fragment.nodes"
 					@note="(n, e) => emit('note', n, e)"
+					@navigate="(p) => emit('navigate', p)"
 				/>
 			</template>
 		</component>

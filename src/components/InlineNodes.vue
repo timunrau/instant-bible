@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Inline, Passage } from '../lib/types'
+import PassageLink from './PassageLink.vue'
 import NoteReferenceText from './NoteReferenceText.vue'
 withDefaults(
 	defineProps<{ nodes: Inline[]; notes?: boolean; linkReferences?: boolean }>(),
@@ -20,6 +21,9 @@ const emit = defineEmits<{
 			/>
 			<template v-else>{{ node.text }}</template>
 		</template>
+		<PassageLink v-else-if="node.kind === 'reference'" :target="node.target" @navigate="(p) => emit('navigate', p)">
+			<InlineNodes :nodes="node.children" :notes="notes" @navigate="(p) => emit('navigate', p)" />
+		</PassageLink>
 		<button
 			v-else-if="node.kind === 'note' && notes !== false"
 			class="note-marker"

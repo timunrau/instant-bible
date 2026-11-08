@@ -17,7 +17,7 @@ export function copyText(
 	const parts: string[] = []
 	for (const chapter of chapters) {
 		for (const block of chapter.blocks) {
-			if (block.kind === 'heading' || block.kind === 'break') continue
+			if (block.kind === 'heading' || block.kind === 'reference' || block.kind === 'break') continue
 			const body = block.fragments
 				.filter((f) => ids.has(f.id))
 				.map((f) => {

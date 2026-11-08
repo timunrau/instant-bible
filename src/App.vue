@@ -326,6 +326,7 @@ onUnmounted(() => {
 			:chapter="chapter"
 			:selected="selected"
 			@note="openNote"
+			@navigate="followNoteReference"
 		/>
 	</main>
 	<footer

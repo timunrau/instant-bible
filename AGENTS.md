@@ -26,7 +26,7 @@ Read [the product contracts](docs/PRODUCT_SPEC.md), the relevant unit fixture, a
 
 ## Scope boundaries
 
-Source footnotes may link their explicit canonical Bible citations to passages in the BSB. Do not add search, accounts, sync, server state, databases, saved highlights/bookmarks/notes, reading plans, audio, AI, recent-reference UI, comparison, split screen, two columns, community, analytics, ads, or a conventional navigation menu.
+Source headings and footnotes may link their explicit canonical Bible citations to passages in the BSB. Do not add search, accounts, sync, server state, databases, saved highlights/bookmarks/notes, reading plans, audio, AI, recent-reference UI, comparison, split screen, two columns, community, analytics, ads, or a conventional navigation menu.
 
 ## Working commands
 
@@ -34,7 +34,7 @@ Use Conventional Commits for all new commits and PR titles: `feat:`, `fix:`, `pe
 
 Run `npm run check` before considering work complete. It covers lint, one strict type check, BSB validation, unit/components, production builds, JS budgets, and browser/offline/Pages tests. On macOS it also compares visual baselines; other platforms explicitly skip the visual suite. Install Chromium with `npx playwright install chromium` first. Tests run directly on the host without Docker; Docker is only an optional self-hosting deployment.
 
-BSB updater: `npm run bible:update-bsb`; validator: `npm run bible:validate`. Generated content lives in `public/bibles/v1/BSB`, its content-addressed asset index in `src/data/bsb-assets.json`. Read `docs/SOURCE_REVIEW.md` before altering fetch(bible) integration. Keep generated assets and lockfile committed. Build/version information is injected by Vite; Docker passes BUILD_SHA.
+BSB updater: `npm run bible:update-bsb`; validator: `npm run bible:validate`. Generated content lives in `public/bibles/v1/BSB`, its content-addressed asset index in `src/data/bsb-assets.json`. Read `docs/SOURCE_REVIEW.md` before altering the official USJ integration. Keep generated assets and lockfile committed. Build/version information is injected by Vite; Docker passes BUILD_SHA.
 
 macOS is the only visual baseline environment. Run `npm run test:visual` locally to compare screenshots, and `npm run test:visual:update` only for deliberate updates. Both commands build fresh assets first. Inspect changed screenshots; do not blanket-update baselines to hide regressions. Linux CI runs functional tests without screenshot comparisons. `npm run build` builds assets only; `npm run check` runs type checking once and builds once for root hosting and once for Pages. Keep the total gzipped application JS under 75 KiB, excluding development-only source tools; Bible/font assets and service-worker code are excluded.
 

@@ -1,12 +1,13 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { normalizeChapter, inlineText } from '../../src/lib/normalize'
+import { inlineText } from '../../src/lib/normalize'
 import { copyText } from '../../src/lib/clipboard'
 import { formatReferences, parseReference } from '../../src/lib/references'
 import ScriptureChapter from '../../src/components/ScriptureChapter.vue'
 import ReaderSettings from '../../src/components/ReaderSettings.vue'
 import type { BibleBook } from '../../src/lib/types'
+import { importUsj, type UsjNode } from '../../scripts/import-usj'
 import { defaults } from '../../src/lib/persistence'
 import assets from '../../src/data/bsb-assets.json'
 const book = (id: string): BibleBook =>
@@ -14,17 +15,16 @@ const book = (id: string): BibleBook =>
 		readFileSync(`public${(assets as Record<string, string>)[id]}`, 'utf8'),
 	) as BibleBook
 const chapter = book('jhn').chapters[2]!
-const parse = (html: string) =>
-	new DOMParser().parseFromString(html, 'text/html')
+const node = (type: string, marker: string, content: (UsjNode | string)[] = []): UsjNode => ({ type, marker, content })
+const chapterFrom = (content: UsjNode[]) => importUsj({ type: 'USJ', content: [{ type: 'chapter', number: '1' }, ...content] }, 'gen', 'Genesis').chapters[0]!
+const milestone: UsjNode = { type: 'verse', marker: 'v', number: '1' }
 describe('Scripture semantic normalization', () => {
 	it('preserves a verse that continues across paragraphs and poetry', () => {
-		const data = normalizeChapter(
-			'gen',
-			1,
-			parse(
-				'<p><sup data-v="1:1">1</sup>In <em>the beginning</em>.</p><p class="fb-q2">God created.</p><p><sup data-v="1:2">2</sup>Next.</p>',
-			),
-		)
+		const data = chapterFrom([
+			node('para', 'p', [milestone, 'In ', node('char', 'it', ['the beginning']), '.']),
+			node('para', 'q2', ['God created.']),
+			node('para', 'p', [{ type: 'verse', number: '2' }, 'Next.']),
+		])
 		expect(data.blocks[0]!.fragments[0]!.id).toBe('gen.1.1')
 		expect(data.blocks[1]!.fragments[0]!.id).toBe('gen.1.1')
 		expect(data.blocks[1]!.kind).toBe('poetry')
@@ -33,42 +33,20 @@ describe('Scripture semantic normalization', () => {
 	})
 	it('preserves Psalm verse markers inside source descriptive headings', () => {
 		const c = book('psa').chapters[2]!
-		expect(
-			c.blocks.find(
-				(b) => b.kind === 'heading' && b.fragments.some((f) => f.number === 1),
-			),
-		).toBeDefined()
-		expect(
-			c.blocks.filter((b) => b.kind === 'poetry')[0]!.fragments[0]!.id,
-		).toBe('psa.3.1')
+		expect(c.blocks.find(b => b.kind === 'heading' && b.fragments.some(f => f.number === 1))).toBeDefined()
+		expect(c.blocks.find(b => b.kind === 'poetry')!.fragments[0]!.id).toBe('psa.3.1')
 	})
 	it('preserves emphasis, small caps, source note markers and note content', () => {
-		const c = normalizeChapter(
-			'gen',
-			1,
-			parse(
-				'<p><sup data-v="1:1">1</sup><span class="fb-sc">LORD</span> <span class="fb-it">word</span><span class="fb-note" data-caller="a"><span>Note <i>italic</i></span></span></p>',
-			),
-		)
+		const c = chapterFrom([node('para', 'p', [milestone, node('char', 'sc', ['LORD']), ' ', node('char', 'it', ['word']), { type: 'note', marker: 'f', caller: 'a', content: ['Note ', node('char', 'it', ['italic'])] }])])
 		const nodes = c.blocks[0]!.fragments[0]!.nodes
-		expect(nodes.map((n) => n.kind)).toEqual([
-			'smallcaps',
-			'text',
-			'em',
-			'note',
-		])
+		expect(nodes.map(n => n.kind)).toEqual(['smallcaps', 'text', 'em', 'note'])
 		expect(inlineText(nodes)).toBe('LORD word')
 		expect(inlineText(nodes, true)).toBe('LORD wordNote italic')
 		expect(nodes.at(-1)).toMatchObject({ marker: 'a' })
 	})
-	it('never passes arbitrary markup, scripts or source attributes to the renderer', () => {
-		const c = normalizeChapter(
-			'gen',
-			1,
-			parse(
-				'<p onclick="bad()"><sup data-v="1:1">1</sup><script>bad()</script><img src="evil"><a href="javascript:bad()">Text</a></p>',
-			),
-		)
+	it('rejects unsupported source markup and never forwards arbitrary attributes', () => {
+		expect(() => chapterFrom([node('para', 'p', [milestone, node('script', 'evil', ['bad()'])])])).toThrow('Unsupported inline')
+		const c = chapterFrom([{ ...node('para', 'p', [milestone, 'Text']), ...{ onclick: 'bad()', href: 'javascript:bad()' } }])
 		expect(JSON.stringify(c)).not.toMatch(/bad|evil|onclick|href/)
 		expect(inlineText(c.blocks[0]!.fragments[0]!.nodes)).toBe('Text')
 	})
