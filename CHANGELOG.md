@@ -1,3 +1,9 @@
+## [1.4.0](https://github.com/timunrau/instant-bible/compare/v1.3.3...v1.4.0) (2026-11-08)
+
+### Features
+
+* use official BSB source with linked heading references ([b69d9f2](https://github.com/timunrau/instant-bible/commit/b69d9f2e7dd170341b2cbaeba526186373706c0f))
+
 ## [1.3.3](https://github.com/timunrau/instant-bible/compare/v1.3.2...v1.3.3) (2026-11-01)
 
 ### Bug Fixes
