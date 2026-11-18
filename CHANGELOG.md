@@ -1,3 +1,9 @@
+## [1.5.0](https://github.com/timunrau/instant-bible/compare/v1.4.0...v1.5.0) (2026-11-18)
+
+### Features
+
+* improve book suggestions and verse navigation ([5458820](https://github.com/timunrau/instant-bible/commit/5458820a19c4165e85668a7e821e5f5192be104c))
+
 ## [1.4.0](https://github.com/timunrau/instant-bible/compare/v1.3.3...v1.4.0) (2026-11-08)
 
 ### Features
