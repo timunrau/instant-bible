@@ -1,4 +1,5 @@
 import { bookById, books, findBook } from './books'
+import { resolveTypedBook } from './bookCompletion'
 import type { Passage, VerseRef } from './types'
 
 export const verseId = (ref: VerseRef) =>
@@ -56,7 +57,9 @@ function span(
 	return verses
 }
 
-export function parseReference(input: string): Passage | undefined {
+export const parseTypedReference = (input: string) => parseReference(input, resolveTypedBook)
+
+export function parseReference(input: string, resolveBook = findBook): Passage | undefined {
 	const normalized = input.trim().replace(/[–—]/g, '-').replace(/\s+/g, ' ')
 	if (!normalized) return
 	let contextBook = ''
@@ -71,7 +74,7 @@ export function parseReference(input: string): Passage | undefined {
 			)
 		let numbers = segment.trim()
 		if (match) {
-			const book = findBook(match[1]!)
+			const book = resolveBook(match[1]!)
 			if (!book) return
 			contextBook = book.id
 			numbers = match[2]!.trim()

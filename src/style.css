@@ -456,17 +456,42 @@ a {
 	flex: 0 0 56px;
 	padding: 0;
 }
-.reference-error {
+.reference-feedback {
 	position: absolute;
-	bottom: 100%;
+	bottom: calc(100% + 10px);
 	left: 0;
 	right: 0;
-	font-size: 0.8rem;
-	color: var(--foreground);
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	max-height: min(230px, max(0px, calc(var(--viewport-height, 100dvh) - 56px - var(--control-gap) - 10px - env(safe-area-inset-bottom))));
+}
+.reference-suggestions,
+.reference-error {
+	margin: 0;
 	background: var(--background);
+	color: var(--foreground);
 	border: 1px solid var(--line);
 	border-radius: 12px;
-	margin: 0 0 10px;
+}
+.reference-suggestions {
+	margin-right: 66px;
+	padding: 3px;
+	list-style: none;
+	overflow: auto;
+	overscroll-behavior: contain;
+}
+.reference-suggestions button {
+	display: block;
+	width: 100%;
+	text-align: left;
+	border-radius: 8px;
+}
+.reference-suggestions button:focus-visible {
+	outline-offset: -2px;
+}
+.reference-error {
+	font-size: 0.8rem;
 	padding: 10px 16px;
 }
 .panel-close {

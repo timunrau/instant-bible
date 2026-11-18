@@ -7,8 +7,8 @@ import { useReader } from './composables/useReader'
 import { useGestures } from './composables/useGestures'
 import { useVisualViewport } from './composables/useVisualViewport'
 import { repository } from './lib/bible'
-import { chapterLabel, ordered, parseReference } from './lib/references'
-import { bookCompletion } from './lib/bookCompletion'
+import { chapterLabel, ordered, parseTypedReference } from './lib/references'
+import { bookCompletion, bookSuggestions } from './lib/bookCompletion'
 import { passageUrl } from './lib/urls'
 import { copyText } from './lib/clipboard'
 import { writeClipboard } from './lib/writeClipboard'
@@ -48,15 +48,17 @@ const referenceOpen = ref(false),
 const picker = ref<HTMLElement>(),
 	referenceForm = ref<HTMLFormElement>(),
 	input = ref<HTMLInputElement>(),
+	suggestionList = ref<HTMLUListElement>(),
 	settingsPanel = ref<HTMLElement>()
 const typed = ref(''),
 	error = ref('')
-const completionReady = ref(false), composing = ref(false)
+const completionReady = ref(false), composing = ref(false), inputFocused = ref(false)
 const suppressReferenceRing = ref(false)
+const showCompletions = computed(() => referenceOpen.value && completionReady.value && !composing.value)
 const completion = computed(() =>
-	referenceOpen.value && completionReady.value && !composing.value
-		? bookCompletion(typed.value) : undefined,
+	showCompletions.value && inputFocused.value ? bookCompletion(typed.value) : undefined,
 )
+const suggestions = computed(() => showCompletions.value ? bookSuggestions(typed.value) : [])
 const confirmation = ref(''),
 	copyError = ref('')
 const copyShortcut = /Mac/.test(navigator.platform) ? '⌘C' : 'Ctrl+C'
@@ -105,9 +107,17 @@ function updateCompletion() {
 		field.selectionStart === field.value.length &&
 		field.selectionEnd === field.value.length && field.scrollLeft === 0
 }
-function acceptCompletion() {
-	if (!completion.value) return
-	typed.value = completion.value.name + ' '
+function focusReferenceInput(event: FocusEvent) {
+	inputFocused.value = true
+	if (suggestionList.value && event.relatedTarget instanceof Node && picker.value?.contains(event.relatedTarget)) {
+		const field = input.value!
+		// Tabbing back from an option can select the whole draft on focus.
+		field.setSelectionRange(field.value.length, field.value.length)
+	}
+	updateCompletion()
+}
+function acceptCompletion(name: string) {
+	typed.value = name + ' '
 	error.value = ''
 	// Keep mobile keyboard focus in the tap handler, before Vue renders.
 	input.value!.value = typed.value
@@ -119,8 +129,22 @@ function referenceKeydown(event: KeyboardEvent) {
 	if (event.key === 'Tab' && !event.shiftKey && !event.ctrlKey &&
 		!event.metaKey && !event.altKey && !event.isComposing && completion.value) {
 		event.preventDefault()
-		acceptCompletion()
+		acceptCompletion(completion.value.name)
 	}
+}
+function suggestionKeydown(event: KeyboardEvent) {
+	if (event.defaultPrevented || event.isComposing || composing.value ||
+		event.shiftKey || event.ctrlKey || event.metaKey || event.altKey ||
+		(event.key !== 'ArrowDown' && event.key !== 'ArrowUp')) return
+	const buttons = Array.from(suggestionList.value?.querySelectorAll('button') ?? [])
+	if (!buttons.length) return
+	const direction = event.key === 'ArrowDown' ? 1 : -1
+	const active = buttons.findIndex((button) => button === document.activeElement)
+	const next = active < 0
+		? (direction === 1 ? 0 : buttons.length - 1)
+		: (active + direction + buttons.length) % buttons.length
+	event.preventDefault()
+	buttons[next]?.focus()
 }
 function close() {
 	if (referenceOpen.value) {
@@ -143,7 +167,7 @@ async function openSettings(event: Event) {
 		?.focus({ preventScroll: true })
 }
 async function submit() {
-	const passage = parseReference(typed.value)
+	const passage = parseTypedReference(typed.value)
 	if (!passage) {
 		error.value = 'Enter a valid Bible reference.'
 		input.value?.focus()
@@ -276,6 +300,9 @@ function keydown(event: KeyboardEvent) {
 	} else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
 		event.preventDefault()
 		reader.step(event.key === 'ArrowRight' ? 1 : -1)
+	} else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+		event.preventDefault()
+		void reader.stepVerse(event.key === 'ArrowDown' ? 1 : -1)
 	}
 }
 watch(
@@ -339,6 +366,7 @@ onUnmounted(() => {
 		:role="referenceOpen ? 'dialog' : undefined"
 		:aria-modal="referenceOpen ? true : undefined"
 		:aria-label="referenceOpen ? 'Go to a passage' : undefined"
+		@keydown="suggestionKeydown"
 	>
 		<button
 			v-if="!selected.size"
@@ -362,7 +390,7 @@ onUnmounted(() => {
 					aria-label="Bible reference"
 					:aria-invalid="!!error"
 					:aria-describedby="error ? 'reference-error' : undefined"
-					:aria-description="completion ? `Tab to complete ${completion.name}` : undefined"
+					:aria-description="completion ? `Tab to complete ${completion.name}` : suggestions.length ? 'Use Tab or arrow keys for book suggestions.' : undefined"
 					autocomplete="off"
 					autocapitalize="off"
 					autocorrect="off"
@@ -372,8 +400,8 @@ onUnmounted(() => {
 					@select="updateCompletion"
 					@keyup="updateCompletion"
 					@click="updateCompletion"
-					@focus="updateCompletion"
-					@blur="completionReady = false"
+					@focus="focusReferenceInput"
+					@blur="inputFocused = false"
 					@scroll="updateCompletion"
 					@compositionstart="composing = true"
 					@compositionend="composing = false; updateCompletion()"
@@ -385,13 +413,21 @@ onUnmounted(() => {
 						tabindex="-1"
 						:aria-label="`Complete ${completion.name}`"
 						@pointerdown.prevent
-						@click="acceptCompletion"
+						@click="acceptCompletion(completion.name)"
 					>
 						{{ completion.suffix }}
 					</button>
 				</div>
 			</div>
 		</form>
+		<div v-if="referenceOpen && (error || suggestions.length)" class="reference-feedback">
+			<p v-if="error" id="reference-error" class="reference-error" role="alert">{{ error }}</p>
+			<ul v-if="suggestions.length" ref="suggestionList" class="reference-suggestions" aria-label="Book suggestions">
+				<li v-for="book in suggestions" :key="book.id">
+					<button type="button" @pointerdown.prevent @click="acceptCompletion(book.name)">{{ book.name }}</button>
+				</li>
+			</ul>
+		</div>
 		<button v-if="referenceOpen" type="submit" form="reference-form" class="go glass-control" aria-label="Go">
 			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
 		</button>
@@ -409,7 +445,6 @@ onUnmounted(() => {
 		>
 			Aa
 		</button>
-		<p v-if="referenceOpen && error" id="reference-error" class="reference-error" role="alert">{{ error }}</p>
 	</footer>
 	<footer
 		v-if="selected.size"

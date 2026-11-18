@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { books } from '../../src/lib/books'
-import { bookCompletion } from '../../src/lib/bookCompletion'
+import { bookCompletion, bookSuggestions } from '../../src/lib/bookCompletion'
 import {
 	fromId,
 	parseReference,
+	parseTypedReference,
 	passageLabel,
 	formatReferences,
 	verseId,
@@ -102,6 +103,43 @@ describe('inline book completion', () => {
 		'John 3; Act', 'xyz', 'j.o.h',
 	])('leaves %s alone', (input) => {
 		expect(bookCompletion(input)).toBeUndefined()
+	})
+})
+describe('book suggestions and typo-tolerant picker submissions', () => {
+	it.each([
+		['z', ['Zechariah', 'Zephaniah']],
+		['jo', ['Job', 'Joel', 'John', 'Jonah', 'Joshua']],
+		['johb', ['Job', 'John']],
+		['Ezekial', ['Ezekiel']],
+		['Zacharias', ['Zechariah']],
+		['1 Corintihans', ['1 Corinthians']],
+		['3 Ezekial', []],
+		['John', []],
+		['jn', []],
+		['joh', []],
+		['z ', []],
+		['Zecharias 4:6', []],
+	] as const)('suggests books in order for %s', (input, names) => {
+		expect(bookSuggestions(input).map((book) => book.name)).toEqual(names)
+	})
+	it.each([
+		['Ezekial 37', 'Ezekiel 37'],
+		['Zecharias 4:6', 'Zechariah 4:6'],
+		['Zacharias', 'Zechariah 1'],
+		['Jhon3:16', 'John 3:16'],
+		['1 Corintihans 13:4', '1 Corinthians 13:4'],
+		['jn 3:16', 'John 3:16'],
+		['phil4:4', 'Philippians 4:4'],
+	])('interprets typed "%s" as %s', (input, canonical) => {
+		expect(passageLabel(parseTypedReference(input)!)).toBe(canonical)
+	})
+	it.each(['z', 'jo 1', 'johb', 'Zecharias 4:99', 'Ezekial 49', '3 Ezekial', 'xyz 1'])(
+		'rejects typed "%s"',
+		(input) => expect(parseTypedReference(input)).toBeUndefined(),
+	)
+	it('limits typo matching to typed references', () => {
+		expect(parseReference('Zecharias 4:6')).toBeUndefined()
+		expect(parseUrl(new URL('/Zecharias/4/6', 'https://bible.test'))).toBeUndefined()
 	})
 })
 describe('local Bible reference interpretation', () => {

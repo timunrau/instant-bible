@@ -16,8 +16,9 @@ export function useReader(
 	const selected = ref(new Set<string>())
 	const status = ref('')
 	let operation = 0
-	let balancing = false
+	let balancing: Promise<void> | undefined
 	let moving = false
+	let waitingForVerseWindow = false
 	let lastUrl = 0
 	let programmaticScrollY: number | undefined
 	let scrollFrame = 0
@@ -28,8 +29,12 @@ export function useReader(
 		Array.from(document.querySelectorAll<HTMLElement>(`[data-verse="${id}"]`))
 	const chapterElement = (book: string, chapter: number) =>
 		document.getElementById(`chapter-${book}-${chapter}`)
+	const atRestoredPosition = () =>
+		programmaticScrollY !== undefined && Math.abs(window.scrollY - programmaticScrollY) < 1
 
 	function capture(): Anchor {
+		// Two verses can start on the same line, so scrolling alone cannot distinguish them.
+		if (atRestoredPosition()) return stableAnchor
 		const elements = Array.from(
 			document.querySelectorAll<HTMLElement>('[data-verse]'),
 		)
@@ -107,9 +112,9 @@ export function useReader(
 		} else history.replaceState({ ...history.state, anchor }, '')
 	}
 
-	async function balance() {
-		if (balancing || moving) return
-		const index = chapterNumber(current.value.book, current.value.chapter)
+	function balance(location = current.value) {
+		if (balancing || moving) return balancing
+		const index = chapterNumber(location.book, location.chapter)
 		const first = chapters.value[0]!
 		const last = chapters.value.at(-1)!
 		const start = chapterNumber(first.book, first.number)
@@ -119,10 +124,13 @@ export function useReader(
 			(end - index >= 3 || end === chapterIndex.length - 1)
 		)
 			return
-		balancing = true
-		const token = operation
+		balancing = rebalance(location, operation)
+		return balancing
+	}
+
+	async function rebalance(location: typeof current.value, token: number) {
 		try {
-			const updated = await windowFor(current.value.book, current.value.chapter)
+			const updated = await windowFor(location.book, location.chapter)
 			if (token !== operation) return
 			const anchor = capture()
 			const element = chapterElement(anchor.book, anchor.chapter)
@@ -142,7 +150,7 @@ export function useReader(
 		} catch {
 			/* Keep the existing chapters readable if local storage was evicted. */
 		} finally {
-			balancing = false
+			balancing = undefined
 			if (token === operation) moving = false
 		}
 	}
@@ -205,6 +213,42 @@ export function useReader(
 		const target = chapterIndex[index + direction]
 		if (target) void navigate({ ...target, verses: [] })
 	}
+	function chapterVerseIds({ book, chapter }: typeof current.value) {
+		const fragments = chapterElement(book, chapter)?.querySelectorAll<HTMLElement>('[data-verse]')
+		return [...new Set(Array.from(fragments ?? [], (element) => element.dataset.verse!))]
+	}
+	async function stepVerse(direction: -1 | 1) {
+		if (moving || waitingForVerseWindow) return
+		const anchor = capture()
+		const verses = chapterVerseIds(anchor)
+		let index = anchor.chapterStart ? -1 : verses.indexOf(verseId(anchor))
+		if (index === -1 && !anchor.chapterStart) {
+			const chapter = chapters.value.find((c) => c.book === anchor.book && c.number === anchor.chapter)
+			if (!chapter) return
+			index = verses.indexOf(verseId({ ...anchor, verse: nearestVerse(chapter, anchor.verse) }))
+		}
+		let id = verses[index + direction]
+		if (!id) {
+			const neighbor = chapterIndex[chapterNumber(anchor.book, anchor.chapter) + direction]
+			if (!neighbor) return
+			if (!chapterElement(neighbor.book, neighbor.chapter)) {
+				// A series of keypresses can reach the edge while the chapter window is loading.
+				const token = operation
+				waitingForVerseWindow = true
+				await balance(anchor)
+				waitingForVerseWindow = false
+				const position = capture()
+				if (token !== operation || moving || position.chapterStart !== anchor.chapterStart ||
+					verseId(position) !== verseId(anchor) || position.fraction !== anchor.fraction) return
+			}
+			id = chapterVerseIds(neighbor).at(direction === 1 ? 0 : -1)
+		}
+		const target = id && fromId(id)
+		if (!target) return
+		restore({ ...target, fraction: 0, chapterStart: false, version: 'BSB' })
+		save()
+		void balance()
+	}
 	function toggle(id: string) {
 		const next = new Set(selected.value)
 		if (next.has(id)) next.delete(id)
@@ -213,7 +257,7 @@ export function useReader(
 	}
 	function onScroll() {
 		// A delayed scroll event from our own restoration must not erase a range URL.
-		if (programmaticScrollY !== undefined && Math.abs(window.scrollY - programmaticScrollY) < 1) return
+		if (atRestoredPosition()) return
 		programmaticScrollY = undefined
 		if (scrollFrame) return
 		scrollFrame = requestAnimationFrame(() => {
@@ -296,6 +340,7 @@ export function useReader(
 		restore,
 		navigate,
 		step,
+		stepVerse,
 		toggle,
 		selectionRefs,
 	}

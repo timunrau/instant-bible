@@ -6,8 +6,9 @@ Ever needed to access a Bible verse in the moment but your Bible app took foreve
 - **Works offline.** The Berean Standard Bible (BSB) is bundled and ready to read.
 - **Installable on mobile.** Add to your home screen for quick access.
 - **Powerful on desktop.** Keyboard shortcuts make it even faster to access and share scripture.
-	- `/` opens the reference picker.
+	- `/` opens the reference picker. Use Tab or Up/Down to move through book suggestions and Enter to fill the focused book.
 	- Left and right arrows navigate between chapters.
+	- Up and down arrows scroll one verse at a time while reading.
 	- Press Ctrl+C or Cmd+C to copy selected text to the clipboard.
 	- `Esc` closes open modals or deslects text.
 - **No bloat.** Only the features you need and no more.
@@ -18,7 +19,7 @@ Ever needed to access a Bible verse in the moment but your Bible app took foreve
 
 ![Mobile reader showing Psalm 23](docs/screenshots/mobile-reader.png)
 
-![Mobile reference input with John 3:16 entered](docs/screenshots/mobile-reference.png)
+![Mobile reference picker suggesting Zechariah and Zephaniah for z](docs/screenshots/mobile-reference.png)
 
 ![Mobile reading settings](docs/screenshots/mobile-settings.png)
 

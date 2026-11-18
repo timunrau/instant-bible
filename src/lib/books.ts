@@ -299,17 +299,18 @@ export const books = canon.map((book) => ({
 	aliases: aliases.find((a) => a.id === book.id)!.aliases,
 }))
 export const bookById = (id: string) => books.find((book) => book.id === id)
-const key = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '')
+export const bookKey = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '')
+export const booksWithPrefix = (query: string) => books.filter((b) =>
+	[b.name, ...b.aliases].some((a) => bookKey(a).startsWith(query)),
+)
 export function findBook(name: string) {
-	const query = key(name)
+	const query = bookKey(name)
 	if (!query) return undefined
 	const exact = books.filter((b) =>
-		[b.name, b.id, ...b.aliases].some((a) => key(a) === query),
+		[b.name, b.id, ...b.aliases].some((a) => bookKey(a) === query),
 	)
 	if (exact.length) return exact.length === 1 ? exact[0] : undefined
-	const partial = books.filter((b) =>
-		[b.name, ...b.aliases].some((a) => key(a).startsWith(query)),
-	)
+	const partial = booksWithPrefix(query)
 	return partial.length === 1 ? partial[0] : undefined
 }
 export const chapterIndex = books.flatMap((b) =>

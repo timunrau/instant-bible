@@ -64,6 +64,34 @@ test('reference focus and navigation work without VisualViewport support', async
 	await expect(page).toHaveURL(/\/John\/3\/16$/)
 })
 
+test('book suggestions fit above the panned mobile keyboard and remain tappable', async ({ page, isMobile }) => {
+	test.skip(!isMobile, 'Exercises the phone keyboard viewport.')
+	await page.goto('/')
+	await settled(page)
+	await page.getByRole('button', { name: 'Open reference picker' }).click()
+	const input = page.getByRole('textbox', { name: 'Bible reference' })
+	await input.fill('j')
+	const list = page.getByRole('list', { name: 'Book suggestions' })
+	const before = (await list.boundingBox())!
+	await page.evaluate(() => {
+		const viewport = window.visualViewport!
+		Object.defineProperties(viewport, {
+			height: { configurable: true, value: 180 },
+			offsetTop: { configurable: true, value: 60 },
+		})
+		viewport.dispatchEvent(new Event('resize'))
+	})
+	await expect.poll(async () => (await list.boundingBox())!.y).toBeGreaterThanOrEqual(60)
+	const bounds = (await list.boundingBox())!
+	expect(bounds.height).toBeLessThan(before.height)
+	expect(bounds.y + bounds.height).toBeLessThan((await input.boundingBox())!.y)
+	await input.fill('z')
+	await list.getByRole('button', { name: 'Zephaniah', exact: true }).tap()
+	await expect(input).toBeFocused()
+	await expect(input).toHaveValue('Zephaniah ')
+	await expect(list).toBeHidden()
+})
+
 for (const mode of ['dark', 'light'] as const) {
 	test(`saved ${mode} theme reaches browser metadata before the app mounts`, async ({ page }) => {
 		await page.emulateMedia({ colorScheme: mode === 'dark' ? 'light' : 'dark' })
